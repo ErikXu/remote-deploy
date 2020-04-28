@@ -20,7 +20,7 @@ namespace RemoteDeploy.Controllers
             scripts.AppendLine("sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine");
             scripts.AppendLine("sudo yum install -y yum-utils");
             scripts.AppendLine("sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo");
-            scripts.AppendLine("sudo yum install docker-ce docker-ce-cli containerd.io");
+            scripts.AppendLine("sudo yum install -y docker-ce docker-ce-cli containerd.io");
             scripts.AppendLine("sudo systemctl start docker");
             scripts.AppendLine("docker info");
 
