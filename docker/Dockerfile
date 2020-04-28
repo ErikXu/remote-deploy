@@ -1,6 +1,6 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 
-RUN apk add openssh-keygen && apk add sshpass
+RUN apt-get update -y &&  apt-get install openssh-server -y && apt-get install sshpass
 
 COPY . /app
 WORKDIR /app
