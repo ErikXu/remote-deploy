@@ -11,7 +11,7 @@ namespace RemoteDeploy.Controllers
     public class SamplesController : ControllerBase
     {
         [HttpPost("docker")]
-        public IActionResult Exec([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword)
+        public IActionResult InstallDocker([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword)
         {
             var fileName = "docker-install.sh";
             var result = $"{rootUser}@{ip}:./{fileName}\r\n";
@@ -23,6 +23,52 @@ namespace RemoteDeploy.Controllers
             scripts.AppendLine("sudo yum install -y docker-ce docker-ce-cli containerd.io");
             scripts.AppendLine("sudo systemctl start docker");
             scripts.AppendLine("docker info");
+
+            var directory = Path.Combine("/files", ip);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var filePath = Path.Combine(directory, fileName);
+            System.IO.File.WriteAllText(filePath, scripts.ToString());
+
+            try
+            {
+                Cmd($"rm -rf /keys/{ip}/sshkey || true");
+                Cmd($"mkdir -p /keys/{ip}/sshkey");
+                Cmd($"ssh-keygen -t rsa -b 4096 -f /keys/{ip}/sshkey/id_rsa -P ''");
+                Cmd($"sshpass -p {rootPassword} ssh-copy-id -o \"StrictHostKeyChecking = no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa.pub {rootUser}@{ip}");
+                Cmd($"scp -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa -r \"{filePath}\" \"{rootUser}@{ip}:/root/{fileName}\"");
+                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"chmod +x /root/{fileName}\"");
+                result += Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"/root/{fileName}\"");
+                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f /root/{fileName}\"");
+                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f .ssh/authorized_keys\"");
+            }
+            catch (Exception ex)
+            {
+                result = ex.Message;
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("rabbit")]
+        public IActionResult InstallRabbitMq([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword, [FromForm]string rabbitUser, [FromForm]string rabbitPassword, [FromForm]string vhost = "/")
+        {
+            var fileName = "rabbit-install.sh";
+            var result = $"{rootUser}@{ip}:./{fileName}\r\n";
+
+            var scripts = new StringBuilder();
+            scripts.AppendLine("yum install rabbitmq-server -y");
+            scripts.AppendLine("systemctl enable rabbitmq-server");
+            scripts.AppendLine("systemctl start rabbitmq-server");
+            scripts.AppendLine("rabbitmq-plugins enable rabbitmq_management");
+            scripts.AppendLine("systemctl restart rabbitmq-server");
+            scripts.AppendLine($"rabbitmqctl add_user {rabbitUser} {rabbitPassword}");
+            scripts.AppendLine($"rabbitmqctl set_user_tags {rabbitUser} administrator");
+            scripts.AppendLine($"rabbitmqctl set_permissions -p '{vhost}' {rabbitUser} '.*' '.*' '.*'");
+            scripts.AppendLine("rabbitmqctl delete_user guest");
 
             var directory = Path.Combine("/files", ip);
             if (!Directory.Exists(directory))
