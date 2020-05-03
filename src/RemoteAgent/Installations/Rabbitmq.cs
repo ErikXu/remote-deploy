@@ -2,7 +2,7 @@
 
 namespace RemoteAgent.Installations
 {
-    public class Rabbit
+    public class Rabbitmq
     {
         public static List<string> Scripts => new List<string>
         {
@@ -17,5 +17,9 @@ namespace RemoteAgent.Installations
              "rabbitmqctl set_permissions -p '/' admin '.*' '.*' '.*'",
              "rabbitmqctl delete_user guest"
         };
+
+        //Uninstall
+        //yum remove -y rabbitmq-server
+        //rm -rf /var/lib/rabbitmq
     }
 }

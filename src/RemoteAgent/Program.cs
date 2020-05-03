@@ -6,7 +6,7 @@ namespace RemoteAgent
     {
         static void Main(string[] args)
         {
-            ComandExecutor.Execute(AliyunYum.Scripts);
+            ComandExecutor.Execute(Mongodb.Scripts);
         }
     }
 }
