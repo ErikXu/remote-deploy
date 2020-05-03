@@ -1,6 +1,4 @@
 ﻿using RemoteAgent.Installations;
-using System;
-using System.Diagnostics;
 
 namespace RemoteAgent
 {
@@ -8,7 +6,7 @@ namespace RemoteAgent
     {
         static void Main(string[] args)
         {
-            ComandExecutor.Execute(Docker.Scripts);
+            ComandExecutor.Execute(Rabbit.Scripts);
         }
     }
 }
