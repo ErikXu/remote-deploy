@@ -6,7 +6,7 @@ namespace RemoteAgent
     {
         static void Main(string[] args)
         {
-            ComandExecutor.Execute(Rabbit.Scripts);
+            ComandExecutor.Execute(AliyunYum.Scripts);
         }
     }
 }

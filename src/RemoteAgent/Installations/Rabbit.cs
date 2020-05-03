@@ -6,7 +6,7 @@ namespace RemoteAgent.Installations
     {
         public static List<string> Scripts => new List<string>
         {
-             "sudo yum update -y",
+             "yum update -y",
              "yum install rabbitmq-server -y",
              "systemctl enable rabbitmq-server",
              "systemctl start rabbitmq-server",
