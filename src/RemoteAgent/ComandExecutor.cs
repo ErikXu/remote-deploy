@@ -1,12 +1,25 @@
-﻿using System;
+﻿using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace RemoteAgent
 {
-    public class ComandExecutor
+    public interface IComandExecutor
     {
-        public static void Execute(List<string> scripts)
+        void Execute(List<string> scripts);
+    }
+
+    public class ComandExecutor: IComandExecutor
+    {
+        private readonly IConsole _console;
+
+        public ComandExecutor(IConsole console)
+        {
+            _console = console;
+        }
+
+        public void Execute(List<string> scripts)
         {
             foreach (var script in scripts)
             {
@@ -14,9 +27,9 @@ namespace RemoteAgent
             }
         }
 
-        private static void Execute(string script)
+        private void Execute(string script)
         {
-            Console.WriteLine(script);
+            _console.WriteLine(script);
 
             try
             {
@@ -34,8 +47,8 @@ namespace RemoteAgent
                     }
                 };
 
-                process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
-                process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data);
+                process.OutputDataReceived += (sender, args) => _console.WriteLine(args.Data);
+                process.ErrorDataReceived += (sender, args) => _console.WriteLine(args.Data);
                 
                 process.Start();
                 process.BeginOutputReadLine();
@@ -44,7 +57,7 @@ namespace RemoteAgent
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _console.WriteLine(ex.Message);
             }
         }
     }

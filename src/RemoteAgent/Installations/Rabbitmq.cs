@@ -4,7 +4,7 @@ namespace RemoteAgent.Installations
 {
     public class Rabbitmq
     {
-        public static List<string> Scripts => new List<string>
+        public static List<string> InstallScripts => new List<string>
         {
              "yum update -y",
              "yum install rabbitmq-server -y",
@@ -18,8 +18,12 @@ namespace RemoteAgent.Installations
              "rabbitmqctl delete_user guest"
         };
 
-        //Uninstall
-        //yum remove -y rabbitmq-server
-        //rm -rf /var/lib/rabbitmq
+        public static List<string> RemoveScripts => new List<string>
+        {
+            "systemctl disable rabbitmq-server",
+             "systemctl stop rabbitmq-server",
+            "yum remove -y rabbitmq-server",
+            "rm -rf /var/lib/rabbitmq"
+        };
     }
 }
