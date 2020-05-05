@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -11,8 +10,15 @@ namespace RemoteDeploy.Controllers
     [ApiController]
     public class ScriptsController : ControllerBase
     {
+        private readonly ICommandExecutor _commandExecutor;
+
+        public ScriptsController(ICommandExecutor commandExecutor)
+        {
+            _commandExecutor = commandExecutor;
+        }
+
         [HttpPost]
-        public async Task<IActionResult> Exec([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword, IFormFile file)
+        public async Task<IActionResult> Execute([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword, IFormFile file)
         {
             var result = $"{rootUser}@{ip}:./{file.FileName}\r\n";
 
@@ -30,15 +36,15 @@ namespace RemoteDeploy.Controllers
 
             try
             {
-                Cmd($"rm -rf /keys/{ip}/sshkey || true");
-                Cmd($"mkdir -p /keys/{ip}/sshkey");
-                Cmd($"ssh-keygen -t rsa -b 4096 -f /keys/{ip}/sshkey/id_rsa -P ''");
-                Cmd($"sshpass -p {rootPassword} ssh-copy-id -o \"StrictHostKeyChecking = no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa.pub {rootUser}@{ip}");
-                Cmd($"scp -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa -r \"{filePath}\" \"{rootUser}@{ip}:/root/{file.FileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"chmod +x /root/{file.FileName}\"");
-                result += Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"/root/{file.FileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f /root/{file.FileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f .ssh/authorized_keys\"");
+                var source = filePath;
+                var target = $"/root/{file.FileName}";
+
+                _commandExecutor.AddSSHKey(ip, rootUser, rootPassword);
+                _commandExecutor.Scp(ip, rootUser, source, target);
+                _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {target}");
+                result +=  _commandExecutor.ExecuteCommandSSH(ip, rootUser, target);
+                _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"rm -f {target}");
+                _commandExecutor.RemoveSSHKey(ip, rootUser);
             }
             catch (Exception ex)
             {
@@ -46,28 +52,6 @@ namespace RemoteDeploy.Controllers
             }
 
             return Ok(result);
-        }
-
-        private string Cmd(string cmd)
-        {
-            var escapedArgs = cmd.Replace("\"", "\\\"");
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{escapedArgs}\"",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-
-            process.Start();
-            var result = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-
-            return result;
         }
     }
 }

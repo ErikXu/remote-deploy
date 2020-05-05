@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RemoteDeploy.Controllers
@@ -10,86 +7,43 @@ namespace RemoteDeploy.Controllers
     [ApiController]
     public class SamplesController : ControllerBase
     {
+        private readonly ICommandExecutor _commandExecutor;
+        private readonly IShellGenerator _shellGenerator;
+
+        public SamplesController(ICommandExecutor commandExecutor, IShellGenerator shellGenerator)
+        {
+            _commandExecutor = commandExecutor;
+            _shellGenerator = shellGenerator;
+        }
+
         [HttpPost("docker")]
         public IActionResult InstallDocker([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword)
         {
-            var fileName = "docker-install.sh";
-            var result = $"{rootUser}@{ip}:./{fileName}\r\n";
-
-            var scripts = new StringBuilder();
-            scripts.AppendLine("sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine");
-            scripts.AppendLine("sudo yum install -y yum-utils");
-            scripts.AppendLine("sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo");
-            scripts.AppendLine("sudo yum install -y docker-ce docker-ce-cli containerd.io");
-            scripts.AppendLine("sudo systemctl start docker");
-            scripts.AppendLine("docker info");
-
-            var directory = Path.Combine("/files", ip);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var filePath = Path.Combine(directory, fileName);
-            System.IO.File.WriteAllText(filePath, scripts.ToString());
-
-            try
-            {
-                Cmd($"rm -rf /keys/{ip}/sshkey || true");
-                Cmd($"mkdir -p /keys/{ip}/sshkey");
-                Cmd($"ssh-keygen -t rsa -b 4096 -f /keys/{ip}/sshkey/id_rsa -P ''");
-                Cmd($"sshpass -p {rootPassword} ssh-copy-id -o \"StrictHostKeyChecking = no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa.pub {rootUser}@{ip}");
-                Cmd($"scp -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa -r \"{filePath}\" \"{rootUser}@{ip}:/root/{fileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"chmod +x /root/{fileName}\"");
-                result += Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"/root/{fileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f /root/{fileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f .ssh/authorized_keys\"");
-            }
-            catch (Exception ex)
-            {
-                result = ex.Message;
-            }
-
-            return Ok(result);
+            var shellResult = _shellGenerator.GenerateDockerShell(ip);
+            return ExecuteShell(ip, rootUser, rootPassword, shellResult);
         }
 
         [HttpPost("rabbit")]
         public IActionResult InstallRabbitMq([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword, [FromForm]string rabbitUser, [FromForm]string rabbitPassword, [FromForm]string vhost = "/")
         {
-            var fileName = "rabbit-install.sh";
-            var result = $"{rootUser}@{ip}:./{fileName}\r\n";
+            var shellResult = _shellGenerator.GenerateRabbitShell(ip, rabbitUser, rabbitPassword, vhost);
+            return ExecuteShell(ip, rootUser, rootPassword, shellResult);
+        }
 
-            var scripts = new StringBuilder();
-            scripts.AppendLine("yum install rabbitmq-server -y");
-            scripts.AppendLine("systemctl enable rabbitmq-server");
-            scripts.AppendLine("systemctl start rabbitmq-server");
-            scripts.AppendLine("rabbitmq-plugins enable rabbitmq_management");
-            scripts.AppendLine("systemctl restart rabbitmq-server");
-            scripts.AppendLine($"rabbitmqctl add_user {rabbitUser} {rabbitPassword}");
-            scripts.AppendLine($"rabbitmqctl set_user_tags {rabbitUser} administrator");
-            scripts.AppendLine($"rabbitmqctl set_permissions -p '{vhost}' {rabbitUser} '.*' '.*' '.*'");
-            scripts.AppendLine("rabbitmqctl delete_user guest");
-
-            var directory = Path.Combine("/files", ip);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var filePath = Path.Combine(directory, fileName);
-            System.IO.File.WriteAllText(filePath, scripts.ToString());
+        private IActionResult ExecuteShell(string ip, string rootUser, string rootPassword, GeneratorResult shellResult)
+        {
+            var result = $"{rootUser}@{ip}:./{shellResult.FileName}\r\n";
 
             try
             {
-                Cmd($"rm -rf /keys/{ip}/sshkey || true");
-                Cmd($"mkdir -p /keys/{ip}/sshkey");
-                Cmd($"ssh-keygen -t rsa -b 4096 -f /keys/{ip}/sshkey/id_rsa -P ''");
-                Cmd($"sshpass -p {rootPassword} ssh-copy-id -o \"StrictHostKeyChecking = no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa.pub {rootUser}@{ip}");
-                Cmd($"scp -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa -r \"{filePath}\" \"{rootUser}@{ip}:/root/{fileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"chmod +x /root/{fileName}\"");
-                result += Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"/root/{fileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f /root/{fileName}\"");
-                Cmd($"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"rm -f .ssh/authorized_keys\"");
+                var source = shellResult.FilePath;
+                var target = $"/root/{shellResult.FileName}";
+                _commandExecutor.AddSSHKey(ip, rootUser, rootPassword);
+                _commandExecutor.Scp(ip, rootUser, source, target);
+                _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {target}");
+                result += _commandExecutor.ExecuteCommandSSH(ip, rootUser, target);
+                _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"rm -f {target}");
+                _commandExecutor.RemoveSSHKey(ip, rootUser);
             }
             catch (Exception ex)
             {
@@ -97,28 +51,6 @@ namespace RemoteDeploy.Controllers
             }
 
             return Ok(result);
-        }
-
-        private string Cmd(string cmd)
-        {
-            var escapedArgs = cmd.Replace("\"", "\\\"");
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{escapedArgs}\"",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-
-            process.Start();
-            var result = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-
-            return result;
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +10,13 @@ namespace RemoteDeploy.Controllers
     [ApiController]
     public class KubernetesController : ControllerBase
     {
+        private readonly ICommandExecutor _commandExecutor;
+
+        public KubernetesController(ICommandExecutor commandExecutor)
+        {
+            _commandExecutor = commandExecutor;
+        }
+
         /// <summary>
         /// Upload kubeconfig
         /// </summary>
@@ -32,14 +38,14 @@ namespace RemoteDeploy.Controllers
         }
 
         [HttpPost]
-        public IActionResult ExecCommand([FromForm]string cluster, [FromForm]string command)
+        public IActionResult ExecuteCommand([FromForm]string cluster, [FromForm]string command)
         {
             var result = $"{cluster}:{command}\r\n";
             var certificate = Path.Combine("/certificates", cluster, "kubeconfig");
 
             try
             {
-                result += Cmd($"{command} --kubeconfig={certificate}");
+                result += _commandExecutor.ExecuteCommand($"{command} --kubeconfig={certificate}");
             }
             catch (Exception ex)
             {
@@ -47,28 +53,6 @@ namespace RemoteDeploy.Controllers
             }
 
             return Ok(result);
-        }
-
-        private string Cmd(string cmd)
-        {
-            var escapedArgs = cmd.Replace("\"", "\\\"");
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{escapedArgs}\"",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-
-            process.Start();
-            var result = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-
-            return result;
         }
     }
 }

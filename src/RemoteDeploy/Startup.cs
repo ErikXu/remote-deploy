@@ -22,6 +22,9 @@ namespace RemoteDeploy
         {
             services.AddControllers();
 
+            services.AddSingleton<ICommandExecutor, CommandExecutor>();
+            services.AddSingleton<IShellGenerator, ShellGenerator>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Remote Deploy API", Version = "v1" });
