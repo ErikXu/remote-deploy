@@ -6,9 +6,9 @@ namespace RemoteAgent.Commands.Remove
     [Command("mongodb", Description = "Remove mongodb")]
     public class RemoveMongodb
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(Mongodb.RemoveScripts);
+            commandExecutor.Execute(Mongodb.RemoveScripts);
         }
     }
 }

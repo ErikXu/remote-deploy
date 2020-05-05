@@ -14,7 +14,7 @@ namespace RemoteAgent
             var serviceCollection = new ServiceCollection();
 
             serviceCollection.AddSingleton(PhysicalConsole.Singleton);
-            serviceCollection.AddSingleton<IComandExecutor, ComandExecutor>();
+            serviceCollection.AddSingleton<ICommandExecutor, CommandExecutor>();
 
             var services = serviceCollection.BuildServiceProvider();
 

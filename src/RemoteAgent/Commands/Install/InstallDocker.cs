@@ -6,9 +6,9 @@ namespace RemoteAgent.Commands.Install
     [Command("docker", Description = "Install docker")]
     public class InstallDocker
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(Docker.InstallScripts);
+            commandExecutor.Execute(Docker.InstallScripts);
         }
     }
 }

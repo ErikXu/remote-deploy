@@ -6,9 +6,9 @@ namespace RemoteAgent.Commands.Remove
     [Command("rabbitmq", Description = "Remove rabbitmq")]
     public class RemoveRabbitmq
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(Rabbitmq.RemoveScripts);
+            commandExecutor.Execute(Rabbitmq.RemoveScripts);
         }
     }
 }

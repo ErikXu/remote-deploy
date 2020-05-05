@@ -6,9 +6,9 @@ namespace RemoteAgent.Commands.Install
     [Command("aliyun-yum", Description = "Remove aliyun yum")]
     public class InstallAliyunYum
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(AliyunYum.Scripts);
+            commandExecutor.Execute(AliyunYum.Scripts);
         }
     }
 }

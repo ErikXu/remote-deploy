@@ -6,9 +6,9 @@ namespace RemoteAgent.Commands.Remove
     [Command("docker", Description = "Remove docker")]
     public class RemoveDocker
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(Docker.RemoveScripts);
+            commandExecutor.Execute(Docker.RemoveScripts);
         }
     }
 }

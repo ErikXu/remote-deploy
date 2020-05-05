@@ -3,7 +3,7 @@ using RemoteAgent.Commands.Install;
 
 namespace RemoteAgent.Commands
 {
-    [Command("install", Description = "Install softwares or middlewares"),
+    [Command("install", Description = "Install software or middleware"),
      Subcommand(typeof(InstallDocker)), Subcommand(typeof(InstallRabbitmq)), 
      Subcommand(typeof(InstallMongodb)), Subcommand(typeof(InstallAliyunYum))]
     public class InstallCommand

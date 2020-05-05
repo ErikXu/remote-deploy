@@ -6,9 +6,9 @@ namespace RemoteAgent.Commands.Install
     [Command("mongodb", Description = "Install mongodb")]
     public class InstallMongodb
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(Mongodb.InstallScripts);
+            commandExecutor.Execute(Mongodb.InstallScripts);
         }
     }
 }

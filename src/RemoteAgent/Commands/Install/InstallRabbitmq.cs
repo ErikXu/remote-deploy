@@ -5,9 +5,9 @@ namespace RemoteAgent.Commands.Install
     [Command("rabbitmq", Description = "Install rabbitmq")]
     public class InstallRabbitmq
     {
-        private void OnExecute(IComandExecutor comandExecutor)
+        private void OnExecute(ICommandExecutor commandExecutor)
         {
-            comandExecutor.Execute(Installations.Rabbitmq.InstallScripts);
+            commandExecutor.Execute(Installations.Rabbitmq.InstallScripts);
         }
     }
 }

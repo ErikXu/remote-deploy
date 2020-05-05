@@ -5,16 +5,16 @@ using System.Diagnostics;
 
 namespace RemoteAgent
 {
-    public interface IComandExecutor
+    public interface ICommandExecutor
     {
         void Execute(List<string> scripts);
     }
 
-    public class ComandExecutor: IComandExecutor
+    public class CommandExecutor: ICommandExecutor
     {
         private readonly IConsole _console;
 
-        public ComandExecutor(IConsole console)
+        public CommandExecutor(IConsole console)
         {
             _console = console;
         }

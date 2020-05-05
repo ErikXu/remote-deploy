@@ -3,7 +3,7 @@ using RemoteAgent.Commands.Remove;
 
 namespace RemoteAgent.Commands
 {
-    [Command("remove", Description = "Remove softwares or middlewares"),
+    [Command("remove", Description = "Remove software or middleware"),
      Subcommand(typeof(RemoveDocker)), Subcommand(typeof(RemoveRabbitmq)), Subcommand(typeof(RemoveMongodb))]
     public class RemoveCommand
     {
