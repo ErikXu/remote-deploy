@@ -1,14 +1,26 @@
-﻿using McMaster.Extensions.CommandLineUtils;
+﻿using System;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using RemoteAgent.Commands;
 
 namespace RemoteAgent
 {
     [HelpOption(Inherited = true)]
-    [Command(Description = "A tool to install softwares or middlewares"),
+    [Command(Description = "A tool to install software or middleware"),
     Subcommand(typeof(InstallCommand)), Subcommand(typeof(RemoveCommand))]
     class Program
     {
+        private readonly IConsole _console;
+
+        [Option("-d|--detach", description: "Run in background", CommandOptionType.NoValue)]
+        public bool Detach { get; set; }
+
+        public Program(IConsole console)
+        {
+            _console = console;
+        }
+
         public static int Main(string[] args)
         {
             var serviceCollection = new ServiceCollection();
@@ -23,23 +35,37 @@ namespace RemoteAgent
                 .UseDefaultConventions()
                 .UseConstructorInjection(services);
 
-            var console = (IConsole)services.GetService(typeof(IConsole));
-
             try
             {
                 return app.Execute(args);
             }
             catch (UnrecognizedCommandParsingException ex)
             {
-                console.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
                 return -1;
             }
         }
 
-        private int OnExecute(CommandLineApplication app, IConsole console)
+        private int OnExecute(CommandLineApplication app)
         {
-            console.WriteLine("Please specify a command.");
-            app.ShowHelp();
+            if (Detach)
+            {
+                var builder = new HostBuilder()
+                    .ConfigureServices((hostContext, services) =>
+                    {
+                        services.AddSingleton(PhysicalConsole.Singleton);
+                        services.AddHostedService<HostedService>();
+                    }).UseConsoleLifetime()
+                    .Build();
+
+                builder.Run();
+            }
+            else
+            {
+                _console.WriteLine("Please specify a command.");
+                app.ShowHelp();
+            }
+
             return 1;
         }
     }
