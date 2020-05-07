@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
@@ -9,17 +11,18 @@ namespace RemoteAgent
     public class HostedService : IHostedService
     {
         private readonly IConsole _console;
-        private Timer _timer;
+        private readonly Socket _socket;
 
         public HostedService(IConsole console)
         {
             _console = console;
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _console.WriteLine("Background service is started...");
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(2));
+            _socket.Connect("127.0.0.1", 4040);
             return Task.CompletedTask;
         }
 
@@ -31,7 +34,6 @@ namespace RemoteAgent
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _console.WriteLine("Background service is stopped...");
-            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

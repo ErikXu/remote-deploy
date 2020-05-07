@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29926.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteDeploy", "RemoteDeploy\RemoteDeploy.csproj", "{A0B9ABE5-1878-4E53-A9F4-84ED5B04D546}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteAgent", "RemoteAgent\RemoteAgent.csproj", "{235A740C-B232-45BF-A1D3-5E82135E8EFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteAgent", "RemoteAgent\RemoteAgent.csproj", "{235A740C-B232-45BF-A1D3-5E82135E8EFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteServer", "RemoteServer\RemoteServer.csproj", "{A6506164-A8C8-4A20-80EB-06E0E9B5F059}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{235A740C-B232-45BF-A1D3-5E82135E8EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{235A740C-B232-45BF-A1D3-5E82135E8EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{235A740C-B232-45BF-A1D3-5E82135E8EFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6506164-A8C8-4A20-80EB-06E0E9B5F059}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6506164-A8C8-4A20-80EB-06E0E9B5F059}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6506164-A8C8-4A20-80EB-06E0E9B5F059}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6506164-A8C8-4A20-80EB-06E0E9B5F059}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
