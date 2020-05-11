@@ -55,6 +55,7 @@ namespace RemoteAgent
                     {
                         services.AddSingleton(PhysicalConsole.Singleton);
                         services.AddHostedService<HostedService>();
+                        services.AddSingleton<ICommandExecutor, CommandExecutor>();
                     }).UseConsoleLifetime()
                     .Build();
 

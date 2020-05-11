@@ -18,6 +18,7 @@ namespace RemoteServer
                 .UseCommand((commandOptions) =>
                 {
                     commandOptions.AddCommand<ConnectCommand>();
+                    commandOptions.AddCommand<OutputCommand>();
                     //commandOptions.AddCommandAssembly(typeof(Program).GetTypeInfo().Assembly);
                 })
                 .ConfigureAppConfiguration((hostCtx, configApp) =>

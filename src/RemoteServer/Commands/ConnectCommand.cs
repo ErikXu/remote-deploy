@@ -6,12 +6,13 @@ using SuperSocket.ProtoBase;
 
 namespace RemoteServer.Commands
 {
-    [Command("connect")]
+    [Command(Key = "Connect")]
     public class ConnectCommand : IAsyncCommand<StringPackageInfo>
     {
         public async ValueTask ExecuteAsync(IAppSession session, StringPackageInfo package)
         {
-            await session.SendAsync(Encoding.UTF8.GetBytes("Connected"));
+            await session.SendAsync(Encoding.UTF8.GetBytes("Command ls /root"));
+            //await session.SendAsync(Encoding.UTF8.GetBytes("Disconnect"));
         }
     }
 }

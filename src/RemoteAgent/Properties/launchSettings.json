@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RemoteAgent": {
+      "commandName": "Project",
+      "commandLineArgs": "-d"
+    }
+  }
+}
