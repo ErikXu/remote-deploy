@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using RemoteCommon;
 using SuperSocket;
 using SuperSocket.Command;
 
@@ -28,7 +29,7 @@ namespace RemoteServer.Commands
             }
   
             //await session.SendAsync(Encoding.UTF8.GetBytes("Command ls /root"));
-            //await session.SendAsync(Encoding.UTF8.GetBytes("Disconnect"));
+            await session.SendAsync(Encoding.UTF8.GetBytes("Connected\r\n"));
         }
     }
 }

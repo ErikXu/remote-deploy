@@ -1,30 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
+using RemoteCommon;
+using SuperSocket.Client;
 
 namespace RemoteAgent
 {
     public class HostedService : IHostedService
     {
         private readonly IConsole _console;
-        private readonly Socket _socket;
-        private readonly ICommandExecutor _commandExecutor;
+        private readonly IEasyClient<PackageInfo> _client;
 
-        public HostedService(IConsole console, ICommandExecutor commandExecutor)
+        public HostedService(IConsole console)
         {
             _console = console;
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _commandExecutor = commandExecutor;
+
+            var pipelineFilter = new CommandLinePipelineFilter
+            {
+                Decoder = new PackageDecoder()
+            };
+
+            _client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _console.WriteLine("Background service is started...");
 
@@ -32,51 +36,34 @@ namespace RemoteAgent
             var port = 4040;
 
             var address = IPAddress.Parse(ip);
-            var endPoint = new IPEndPoint(address, port);
 
-            _socket.Connect(endPoint);
+            if (!await _client.ConnectAsync(new IPEndPoint(address, port), cancellationToken))
+            {
+                _console.WriteLine("Failed to connect the target server.");
+            }
 
-            var res = new byte[1024];
+            _client.PackageHandler += async (sender, package) =>
+            {
+                switch (package.Key.ToLower())
+                {
+                    case "command":
+                        await Execute(package.Content);
+                        break;
+                    default:
+                        _console.WriteLine($"Unknown command:{package.Key}");
+                        break;
+                }
+            };
 
-            Task.Factory.StartNew(() =>
-             {
-                 while (true)
-                 {
-                     var length = _socket.Receive(res, res.Length, SocketFlags.None);
+            _client.StartReceive();
 
-                     var packages = Encoding.UTF8.GetString(res, 0, length).Split(' ', 2);
-                     var command = packages[0];
-                     var content = string.Empty;
-                     if (packages.Length == 2)
-                     {
-                         content = packages[1];
-                     }
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent\r\n"));
 
-                     if (command.Equals("Disconnect", StringComparison.OrdinalIgnoreCase))
-                     {
-                         return;
-                     }
-
-                     switch (command.ToLower())
-                     {
-                         case "command":
-                             Execute(content);
-                             break;
-                         default:
-                             _console.WriteLine($"Unknown command:{command}");
-                             break;
-                     }
-                 }
-             }, cancellationToken);
-
-            _socket.Send(Encoding.UTF8.GetBytes("Connect Agent\r\n"));
-
-            return Task.CompletedTask;
         }
 
-        private void Execute(string script)
+        private async Task Execute(string script)
         {
-            _socket.Send(Encoding.UTF8.GetBytes("Output " + script + "\r\n"));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + script + "\r\n"));
 
             try
             {
@@ -94,8 +81,8 @@ namespace RemoteAgent
                     }
                 };
 
-                process.OutputDataReceived += (sender, args) => _socket.Send(Encoding.UTF8.GetBytes("Output " + args.Data + "\r\n"));
-                process.ErrorDataReceived += (sender, args) => _socket.Send(Encoding.UTF8.GetBytes("Output " + args.Data + "\r\n"));
+                process.OutputDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + "\r\n"));
+                process.ErrorDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + "\r\n"));
 
                 process.Start();
                 process.BeginOutputReadLine();
@@ -104,15 +91,14 @@ namespace RemoteAgent
             }
             catch (Exception ex)
             {
-                _socket.Send(Encoding.UTF8.GetBytes("Output " + ex.Message + "\r\n"));
+                await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + ex.Message + "\r\n"));
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            _socket.Disconnect(false);
+            await _client.CloseAsync();
             _console.WriteLine("Background service is stopped...");
-            return Task.CompletedTask;
         }
     }
 }

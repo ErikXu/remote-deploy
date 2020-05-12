@@ -2,7 +2,7 @@
 using System.Text;
 using SuperSocket.ProtoBase;
 
-namespace RemoteServer
+namespace RemoteCommon
 {
     public class PackageDecoder : IPackageDecoder<PackageInfo>
     {

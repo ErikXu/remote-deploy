@@ -11,4 +11,8 @@
     <PackageReference Include="SuperSocket.SessionContainer" Version="2.0.0-preview3-06" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RemoteCommon\RemoteCommon.csproj" />
+  </ItemGroup>
+
 </Project>

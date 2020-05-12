@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RemoteCommon;
 using RemoteServer.Commands;
 using SuperSocket;
 using SuperSocket.Command;
@@ -15,7 +16,7 @@ namespace RemoteServer
     {
         static IHostBuilder CreateSocketServerBuilder()
         {
-            return SuperSocketHostBuilder.Create<PackageInfo, CommandLinePipelineFilter>()
+            return SuperSocketHostBuilder.Create<PackageInfo, RemoteCommon.CommandLinePipelineFilter>()
                 .UseCommand((commandOptions) =>
                 {
                     commandOptions.AddCommand<ConnectCommand>();

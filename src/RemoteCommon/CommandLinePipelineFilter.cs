@@ -1,6 +1,6 @@
 ﻿using SuperSocket.ProtoBase;
 
-namespace RemoteServer
+namespace RemoteCommon
 {
     public class CommandLinePipelineFilter : TerminatorPipelineFilter<PackageInfo>
     {
