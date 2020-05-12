@@ -57,13 +57,13 @@ namespace RemoteAgent
 
             _client.StartReceive();
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent\r\n"));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent" + Package.Terminator));
 
         }
 
         private async Task Execute(string script)
         {
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + script + "\r\n"));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + script + Package.Terminator));
 
             try
             {
@@ -81,8 +81,8 @@ namespace RemoteAgent
                     }
                 };
 
-                process.OutputDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + "\r\n"));
-                process.ErrorDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + "\r\n"));
+                process.OutputDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + Package.Terminator));
+                process.ErrorDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + Package.Terminator));
 
                 process.Start();
                 process.BeginOutputReadLine();
@@ -91,7 +91,7 @@ namespace RemoteAgent
             }
             catch (Exception ex)
             {
-                await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + ex.Message + "\r\n"));
+                await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + ex.Message + Package.Terminator));
             }
         }
 

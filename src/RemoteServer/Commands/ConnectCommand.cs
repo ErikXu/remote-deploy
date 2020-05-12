@@ -29,7 +29,7 @@ namespace RemoteServer.Commands
             }
   
             //await session.SendAsync(Encoding.UTF8.GetBytes("Command ls /root"));
-            await session.SendAsync(Encoding.UTF8.GetBytes("Connected\r\n"));
+            await session.SendAsync(Encoding.UTF8.GetBytes("Connected" + Package.Terminator));
         }
     }
 }
