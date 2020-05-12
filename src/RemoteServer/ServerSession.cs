@@ -6,6 +6,8 @@ namespace RemoteServer
 {
     public class ServerSession : AppSession
     {
+        public ClientType ClientType { get; set; }
+
         protected override async ValueTask OnSessionConnectedAsync()
         {
             await base.OnSessionConnectedAsync();
@@ -15,5 +17,12 @@ namespace RemoteServer
         {
             await base.OnSessionClosedAsync(e);
         }
+    }
+
+    public enum ClientType
+    {
+        Unknown,
+        Web,
+        Agent
     }
 }

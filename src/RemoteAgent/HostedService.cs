@@ -69,7 +69,7 @@ namespace RemoteAgent
                  }
              }, cancellationToken);
 
-            _socket.Send(Encoding.UTF8.GetBytes("Connect\r\n"));
+            _socket.Send(Encoding.UTF8.GetBytes("Connect Agent\r\n"));
 
             return Task.CompletedTask;
         }

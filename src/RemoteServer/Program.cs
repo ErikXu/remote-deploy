@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteServer.Commands;
@@ -14,7 +15,7 @@ namespace RemoteServer
     {
         static IHostBuilder CreateSocketServerBuilder()
         {
-            return SuperSocketHostBuilder.Create<StringPackageInfo, CommandLinePipelineFilter>()
+            return SuperSocketHostBuilder.Create<PackageInfo, CommandLinePipelineFilter>()
                 .UseCommand((commandOptions) =>
                 {
                     commandOptions.AddCommand<ConnectCommand>();
@@ -29,7 +30,12 @@ namespace RemoteServer
                         { "serverOptions:listeners:0:ip", "Any" },
                         { "serverOptions:listeners:0:port", "4040" }
                     });
-                })
+                }).ConfigureServices(
+                    (hostCtx, services) =>
+                    {
+                        services.AddSingleton<IPackageDecoder<PackageInfo>, PackageDecoder>();
+                    }
+                )
                 .ConfigureLogging((hostCtx, loggingBuilder) =>
                 {
                     loggingBuilder.AddConsole();
