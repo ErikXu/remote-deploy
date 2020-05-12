@@ -45,7 +45,7 @@ namespace RemoteServer
         static async Task Main(string[] args)
         {
             var builder = CreateSocketServerBuilder();
-            builder.UseSession<ServerSession>();
+            builder.UseSession<ServerSession>().UseInProcSessionContainer();
             var host = builder.Build();
             await host.RunAsync();
         }
