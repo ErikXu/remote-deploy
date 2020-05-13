@@ -9,7 +9,14 @@ namespace RemoteApi.Controllers
     [ApiController]
     public class AgentsController : ControllerBase
     {
-        [HttpPost]
+        private readonly ICommandExecutor _commandExecutor;
+
+        public AgentsController(ICommandExecutor commandExecutor)
+        {
+            _commandExecutor = commandExecutor;
+        }
+
+        [HttpPost("upload")]
         public async Task<IActionResult> Upload(IFormFile file)
         {
             var directory = "/agents";
@@ -23,6 +30,20 @@ namespace RemoteApi.Controllers
             {
                 await file.CopyToAsync(stream);
             }
+            return Ok();
+        }
+
+        [HttpPost("install")]
+        public IActionResult Execute([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword)
+        {
+            var directory = "/agents";
+            var filePath = Path.Combine(directory, "remote-agent");
+
+            _commandExecutor.AddSSHKey(ip, rootUser, rootPassword);
+            _commandExecutor.Scp(ip, rootUser, filePath, filePath);
+            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {filePath}");
+            _commandExecutor.RemoveSSHKey(ip, rootUser);
+
             return Ok();
         }
     }

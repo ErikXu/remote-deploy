@@ -31,6 +31,8 @@ namespace RemoteApi
                 c.IncludeXmlComments(xmlPath);
             });
 
+            services.AddSingleton<ICommandExecutor, CommandExecutor>();
+
             services.Configure<KestrelServerOptions>(options =>
             {
                 options.Limits.MaxRequestBodySize = int.MaxValue;
