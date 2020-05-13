@@ -15,8 +15,9 @@ namespace RemoteAgent
     {
         private readonly IConsole _console;
         private readonly IEasyClient<PackageInfo> _client;
+        private readonly IConfigService _configService;
 
-        public HostedService(IConsole console)
+        public HostedService(IConsole console, IConfigService configService)
         {
             _console = console;
 
@@ -26,18 +27,18 @@ namespace RemoteAgent
             };
 
             _client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
+            _configService = configService;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _console.WriteLine("Background service is started...");
 
-            var ip = "127.0.0.1";
-            var port = 4040;
+            var config = _configService.Get();
 
-            var address = IPAddress.Parse(ip);
+            var address = IPAddress.Parse(config.ServerIp);
 
-            if (!await _client.ConnectAsync(new IPEndPoint(address, port), cancellationToken))
+            if (!await _client.ConnectAsync(new IPEndPoint(address, config.ServerPort), cancellationToken))
             {
                 _console.WriteLine("Failed to connect the target server.");
             }

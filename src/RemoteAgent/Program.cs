@@ -8,7 +8,7 @@ namespace RemoteAgent
 {
     [HelpOption(Inherited = true)]
     [Command(Description = "A tool to install software or middleware"),
-    Subcommand(typeof(InstallCommand)), Subcommand(typeof(RemoveCommand))]
+    Subcommand(typeof(InstallCommand)), Subcommand(typeof(RemoveCommand)), Subcommand(typeof(ConfigCommand))]
     class Program
     {
         private readonly IConsole _console;
@@ -27,6 +27,7 @@ namespace RemoteAgent
 
             serviceCollection.AddSingleton(PhysicalConsole.Singleton);
             serviceCollection.AddSingleton<ICommandExecutor, CommandExecutor>();
+            serviceCollection.AddSingleton<IConfigService, ConfigService>();
 
             var services = serviceCollection.BuildServiceProvider();
 
@@ -56,6 +57,7 @@ namespace RemoteAgent
                         services.AddSingleton(PhysicalConsole.Singleton);
                         services.AddHostedService<HostedService>();
                         services.AddSingleton<ICommandExecutor, CommandExecutor>();
+                        services.AddSingleton<IConfigService, ConfigService>();
                     }).UseConsoleLifetime()
                     .Build();
 
