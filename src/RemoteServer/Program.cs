@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,15 +21,7 @@ namespace RemoteServer
                     commandOptions.AddCommand<OutputCommand>();
                     //commandOptions.AddCommandAssembly(typeof(Program).GetTypeInfo().Assembly);
                 })
-                .ConfigureAppConfiguration((hostCtx, configApp) =>
-                {
-                    configApp.AddInMemoryCollection(new Dictionary<string, string>
-                    {
-                        { "serverOptions:name", "TestServer" },
-                        { "serverOptions:listeners:0:ip", "Any" },
-                        { "serverOptions:listeners:0:port", "4040" }
-                    });
-                }).ConfigureServices(
+                .ConfigureServices(
                     (hostCtx, services) =>
                     {
                         services.AddSingleton<IPackageDecoder<PackageInfo>, PackageDecoder>();
