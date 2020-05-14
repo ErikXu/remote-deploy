@@ -40,6 +40,7 @@ namespace RemoteApi.Controllers
             var filePath = Path.Combine(directory, "remote-agent");
 
             _commandExecutor.AddSSHKey(ip, rootUser, rootPassword);
+            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"mkdir -p {directory}");
             _commandExecutor.Scp(ip, rootUser, filePath, filePath);
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {filePath}");
             _commandExecutor.RemoveSSHKey(ip, rootUser);

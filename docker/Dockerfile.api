@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 
+#Install ssh-keygen and sshpass
+RUN sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list && apt-get update -y &&  apt-get install openssh-server -y && apt-get install sshpass
+
 COPY . /app
 WORKDIR /app
 EXPOSE 5000/tcp
