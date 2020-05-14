@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace RemoteApi.Controllers
 {
@@ -10,10 +11,12 @@ namespace RemoteApi.Controllers
     public class AgentsController : ControllerBase
     {
         private readonly ICommandExecutor _commandExecutor;
+        private readonly IConfiguration _configuration;
 
-        public AgentsController(ICommandExecutor commandExecutor)
+        public AgentsController(ICommandExecutor commandExecutor, IConfiguration configuration)
         {
             _commandExecutor = commandExecutor;
+            _configuration = configuration;
         }
 
         [HttpPost("upload")]
@@ -39,10 +42,14 @@ namespace RemoteApi.Controllers
             var directory = "/agents";
             var filePath = Path.Combine(directory, "remote-agent");
 
+            var serverIp = _configuration["RemoteServer:Ip"];
+            var serverPort = _configuration["RemoteServer:Port"];
+
             _commandExecutor.AddSSHKey(ip, rootUser, rootPassword);
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"mkdir -p {directory}");
             _commandExecutor.Scp(ip, rootUser, filePath, filePath);
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {filePath}");
+            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"{filePath} config set -i {serverIp} -p {serverPort}");
             _commandExecutor.RemoveSSHKey(ip, rootUser);
 
             return Ok();
