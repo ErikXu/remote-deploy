@@ -47,7 +47,7 @@ namespace RemoteAgent
             {
                 switch (package.Key.ToLower())
                 {
-                    case "command":
+                    case "execute":
                         await Execute(package.Content);
                         break;
                     default:

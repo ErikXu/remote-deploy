@@ -19,6 +19,7 @@ namespace RemoteServer
                 {
                     commandOptions.AddCommand<ConnectCommand>();
                     commandOptions.AddCommand<OutputCommand>();
+                    commandOptions.AddCommand<ExecuteCommand>();
                     //commandOptions.AddCommandAssembly(typeof(Program).GetTypeInfo().Assembly);
                 })
                 .ConfigureServices(
