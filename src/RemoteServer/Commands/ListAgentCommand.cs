@@ -33,7 +33,7 @@ namespace RemoteServer.Commands
                 Port = n.Port
             }).ToList();
 
-            await session.SendAsync(Encoding.UTF8.GetBytes("ListAgent" + JsonConvert.SerializeObject(agents) + Package.Terminator));
+            await session.SendAsync(Encoding.UTF8.GetBytes("ListAgent " + JsonConvert.SerializeObject(agents) + Package.Terminator));
         }
     }
 }

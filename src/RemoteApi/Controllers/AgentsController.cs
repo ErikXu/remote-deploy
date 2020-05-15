@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +45,8 @@ namespace RemoteApi.Controllers
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
+
+            await client.SendAsync(Encoding.UTF8.GetBytes("ListAgent" + Package.Terminator));
 
             while (true)
             {
