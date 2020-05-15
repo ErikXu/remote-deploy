@@ -27,7 +27,7 @@ namespace RemoteServer.Commands
 
             foreach (IAppSession serverSession in sessions)
             {
-                await serverSession.SendAsync(Encoding.UTF8.GetBytes(package.Content + Package.Terminator));
+                await serverSession.SendAsync(Encoding.UTF8.GetBytes($"Output {package.Content}" + Package.Terminator));
             }
         }
     }

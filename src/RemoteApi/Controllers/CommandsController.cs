@@ -38,6 +38,7 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
+            await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
             await client.SendAsync(Encoding.UTF8.GetBytes($"Execute {command}" + Package.Terminator));
 
             var result = string.Empty;
@@ -50,13 +51,13 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                if (p.Content.Equals("Done", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(p.Content) && p.Content.Equals("Done", StringComparison.OrdinalIgnoreCase))
                 {
                     await client.CloseAsync();
                     return Ok(result);
                 }
 
-                result += p.Content;
+                result += p.Content + Environment.NewLine;
             }
         }
     }
