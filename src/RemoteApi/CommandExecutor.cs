@@ -11,9 +11,7 @@ namespace RemoteApi
 
         void Scp(string ip, string rootUser, string source, string target);
 
-        string ExecuteCommandSSH(string ip, string rootUser, string command);
-
-        string ExecuteCommand(string command);
+        string ExecuteCommandSSH(string ip, string rootUser, string command, bool noWait = false);
     }
 
     public class CommandExecutor : ICommandExecutor
@@ -43,7 +41,7 @@ namespace RemoteApi
             ExecuteCommand(script);
         }
 
-        public string ExecuteCommandSSH(string ip, string rootUser, string command)
+        public string ExecuteCommandSSH(string ip, string rootUser, string command, bool noWait = false)
         {
             var script = $"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"{command}\"";
             return ExecuteCommand(script);
@@ -57,7 +55,7 @@ namespace RemoteApi
             }
         }
 
-        public string ExecuteCommand(string command)
+        private string ExecuteCommand(string command, bool noWait = false)
         {
             var escapedArgs = command.Replace("\"", "\\\"");
             var process = new Process
@@ -74,6 +72,12 @@ namespace RemoteApi
             };
 
             process.Start();
+
+            if (noWait)
+            {
+                return string.Empty;
+            }
+
             process.WaitForExit();
 
             var message = process.StandardOutput.ReadToEnd();

@@ -50,7 +50,7 @@ namespace RemoteApi.Controllers
             _commandExecutor.Scp(ip, rootUser, filePath, filePath);
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {filePath}");
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"{filePath} config set -i {serverIp} -p {serverPort}");
-            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"nohup {filePath} -d &");
+            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"nohup {filePath} -d &", true);
             _commandExecutor.RemoveSSHKey(ip, rootUser);
 
             return Ok();
