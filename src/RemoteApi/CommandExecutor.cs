@@ -44,7 +44,7 @@ namespace RemoteApi
         public string ExecuteCommandSSH(string ip, string rootUser, string command, bool noWait = false)
         {
             var script = $"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"{command}\"";
-            return ExecuteCommand(script);
+            return ExecuteCommand(script, noWait);
         }
 
         private void ExecuteCommands(List<string> commands)
