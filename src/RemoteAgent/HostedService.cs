@@ -49,6 +49,7 @@ namespace RemoteAgent
                 {
                     case "execute":
                         await Execute(package.Content);
+                        await _client.SendAsync(Encoding.UTF8.GetBytes("Output Done" + Package.Terminator));
                         break;
                     case "connected":
                         _console.WriteLine("Connected");
