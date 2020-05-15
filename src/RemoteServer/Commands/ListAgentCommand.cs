@@ -30,7 +30,8 @@ namespace RemoteServer.Commands
             {
                 SessionId = n.SessionID,
                 Ip = n.Ip,
-                Port = n.Port
+                Port = n.Port,
+                ConnectTime = n.ConnectTime
             }).ToList();
 
             await session.SendAsync(Encoding.UTF8.GetBytes("ListAgent " + JsonConvert.SerializeObject(agents) + Package.Terminator));

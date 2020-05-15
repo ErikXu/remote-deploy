@@ -14,8 +14,11 @@ namespace RemoteServer
 
         public int Port { get; set; }
 
+        public DateTime ConnectTime { get; set; }
+
         protected override async ValueTask OnSessionConnectedAsync()
         {
+            ConnectTime = DateTime.UtcNow;
             if (RemoteEndPoint is IPEndPoint remoteIpEndPoint)
             {
                 Ip = remoteIpEndPoint.Address.ToString();
