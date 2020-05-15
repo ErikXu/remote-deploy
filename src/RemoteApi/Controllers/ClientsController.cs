@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,13 +15,23 @@ namespace RemoteApi.Controllers
     [ApiController]
     public class ClientsController : ControllerBase
     {
-        private readonly string _serverIp;
         private readonly int _serverPort;
+
+        private readonly IEasyClient<PackageInfo> _client;
+        private readonly IPAddress _address;
 
         public ClientsController(IConfiguration configuration)
         {
-            _serverIp = configuration["RemoteServer:Ip"];
+            var serverIp = configuration["RemoteServer:Ip"];
             _serverPort = int.Parse(configuration["RemoteServer:Port"]);
+            _address = IPAddress.Parse(serverIp);
+
+            var pipelineFilter = new CommandLinePipelineFilter
+            {
+                Decoder = new PackageDecoder()
+            };
+
+            _client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
         }
 
         /// <summary>
@@ -30,33 +41,52 @@ namespace RemoteApi.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            var pipelineFilter = new CommandLinePipelineFilter
-            {
-                Decoder = new PackageDecoder()
-            };
-
-            var client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
-            var address = IPAddress.Parse(_serverIp);
-
-            if (!await client.ConnectAsync(new IPEndPoint(address, _serverPort)))
+            if (!await _client.ConnectAsync(new IPEndPoint(_address, _serverPort)))
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await client.SendAsync(Encoding.UTF8.GetBytes("ListClient" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("ListClient" + Package.Terminator));
 
             while (true)
             {
-                var p = await client.ReceiveAsync();
+                var p = await _client.ReceiveAsync();
 
                 if (p == null)
                 {
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                var agents = JsonConvert.DeserializeObject<List<ClientInfo>>(p.Content);
-                await client.CloseAsync();
+                var agents = JsonConvert.DeserializeObject<List<ClientInfo>>(p.Content).OrderByDescending(n => n.ConnectTime);
+                await _client.CloseAsync();
                 return Ok(agents);
+            }
+        }
+
+        /// <summary>
+        /// Delete client
+        /// </summary>
+        /// <returns></returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            if (!await _client.ConnectAsync(new IPEndPoint(_address, _serverPort)))
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
+            }
+
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"Disconnect {id}" + Package.Terminator));
+            while (true)
+            {
+                var p = await _client.ReceiveAsync();
+
+                if (p == null)
+                {
+                    return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
+                }
+
+                await _client.CloseAsync();
+                return Ok(p.Content);
             }
         }
     }

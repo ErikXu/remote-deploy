@@ -20,6 +20,7 @@ namespace RemoteServer.Commands
         {
             _serviceProvider = serviceProvider;
         }
+
         public async ValueTask ExecuteAsync(IAppSession session, PackageInfo package)
         {
             _sessionContainer = _serviceProvider.GetSessionContainer();
