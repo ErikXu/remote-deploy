@@ -25,11 +25,14 @@ namespace RemoteApi.Controllers
         {
             _commandExecutor = commandExecutor;
 
-            var configuration1 = configuration;
-            _serverIp = configuration1["RemoteServer:Ip"];
-            _serverPort = int.Parse(configuration1["RemoteServer:Port"]);
+            _serverIp = configuration["RemoteServer:Ip"];
+            _serverPort = int.Parse(configuration["RemoteServer:Port"]);
         }
 
+        /// <summary>
+        /// List all agents
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> List()
         {
@@ -58,10 +61,15 @@ namespace RemoteApi.Controllers
                 }
 
                 var agents = JsonConvert.DeserializeObject<List<AgentInfo>>(p.Content);
+                await client.CloseAsync();
                 return Ok(agents);
             }
         }
 
+        /// <summary>
+        /// upload the latest agent
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("upload")]
         public async Task<IActionResult> Upload(IFormFile file)
         {
@@ -80,6 +88,10 @@ namespace RemoteApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Install agent to specified machine
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("install")]
         public IActionResult Execute([FromForm]string ip, [FromForm]string rootUser, [FromForm]string rootPassword)
         {

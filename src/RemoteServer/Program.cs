@@ -21,6 +21,7 @@ namespace RemoteServer
                     commandOptions.AddCommand<OutputCommand>();
                     commandOptions.AddCommand<ExecuteCommand>();
                     commandOptions.AddCommand<ListAgentCommand>();
+                    commandOptions.AddCommand<ListClientCommand>();
                     //commandOptions.AddCommandAssembly(typeof(Program).GetTypeInfo().Assembly);
                 })
                 .ConfigureServices(

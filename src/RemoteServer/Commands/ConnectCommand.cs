@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using RemoteCommon;
@@ -26,12 +25,6 @@ namespace RemoteServer.Commands
                 else
                 {
                     serverSession.ClientType = ClientType.Unknown;
-                }
-
-                if (session.RemoteEndPoint is IPEndPoint remoteIpEndPoint)
-                {
-                    serverSession.Ip = remoteIpEndPoint.Address.ToString();
-                    serverSession.Port = remoteIpEndPoint.Port;
                 }
             }
 

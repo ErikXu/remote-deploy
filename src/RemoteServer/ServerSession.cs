@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
+using RemoteCommon;
 using SuperSocket.Server;
 
 namespace RemoteServer
@@ -14,6 +16,11 @@ namespace RemoteServer
 
         protected override async ValueTask OnSessionConnectedAsync()
         {
+            if (RemoteEndPoint is IPEndPoint remoteIpEndPoint)
+            {
+                Ip = remoteIpEndPoint.Address.ToString();
+                Port = remoteIpEndPoint.Port;
+            }
             await base.OnSessionConnectedAsync();
         }
 
@@ -21,12 +28,5 @@ namespace RemoteServer
         {
             await base.OnSessionClosedAsync(e);
         }
-    }
-
-    public enum ClientType
-    {
-        Unknown,
-        Web,
-        Agent
     }
 }

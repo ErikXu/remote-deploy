@@ -9,31 +9,33 @@ using SuperSocket.Command;
 
 namespace RemoteServer.Commands
 {
-    [Command(Key = "ListAgent")]
-    public class ListAgentCommand : IAsyncCommand<PackageInfo>
+    [Command(Key = "ListClient")]
+    public class ListClientCommand : IAsyncCommand<PackageInfo>
     {
         private ISessionContainer _sessionContainer;
 
         private readonly IServiceProvider _serviceProvider;
 
-        public ListAgentCommand(IServiceProvider serviceProvider)
+        public ListClientCommand(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
+
         public async ValueTask ExecuteAsync(IAppSession session, PackageInfo package)
         {
             _sessionContainer = _serviceProvider.GetSessionContainer();
 
-            var sessions = _sessionContainer.GetSessions<ServerSession>(n => n.ClientType == ClientType.Agent).ToList();
+            var sessions = _sessionContainer.GetSessions<ServerSession>().ToList();
 
-            var agents = sessions.Select(n => new AgentInfo
+            var clients = sessions.Select(n => new ClientInfo
             {
                 SessionId = n.SessionID,
                 Ip = n.Ip,
-                Port = n.Port
+                Port = n.Port,
+                ClientType = n.ClientType
             }).ToList();
 
-            await session.SendAsync(Encoding.UTF8.GetBytes("ListAgent " + JsonConvert.SerializeObject(agents) + Package.Terminator));
+            await session.SendAsync(Encoding.UTF8.GetBytes("ListClient " + JsonConvert.SerializeObject(clients) + Package.Terminator));
         }
     }
 }
