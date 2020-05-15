@@ -8,6 +8,10 @@ namespace RemoteServer
     {
         public ClientType ClientType { get; set; }
 
+        public string Ip { get; set; }
+
+        public int Port { get; set; }
+
         protected override async ValueTask OnSessionConnectedAsync()
         {
             await base.OnSessionConnectedAsync();

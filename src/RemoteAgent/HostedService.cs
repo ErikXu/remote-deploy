@@ -50,6 +50,9 @@ namespace RemoteAgent
                     case "execute":
                         await Execute(package.Content);
                         break;
+                    case "connected":
+                        _console.WriteLine("Connected");
+                        break;
                     default:
                         _console.WriteLine($"Unknown command:{package.Key}");
                         break;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using RemoteCommon;
@@ -26,9 +27,14 @@ namespace RemoteServer.Commands
                 {
                     serverSession.ClientType = ClientType.Unknown;
                 }
+
+                if (session.RemoteEndPoint is IPEndPoint remoteIpEndPoint)
+                {
+                    serverSession.Ip = remoteIpEndPoint.Address.ToString();
+                    serverSession.Port = remoteIpEndPoint.Port;
+                }
             }
-  
-            //await session.SendAsync(Encoding.UTF8.GetBytes("Command ls /root"));
+
             await session.SendAsync(Encoding.UTF8.GetBytes("Connected" + Package.Terminator));
         }
     }

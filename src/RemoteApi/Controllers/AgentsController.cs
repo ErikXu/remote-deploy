@@ -1,8 +1,13 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using RemoteCommon;
+using SuperSocket.Client;
 
 namespace RemoteApi.Controllers
 {
@@ -11,12 +16,47 @@ namespace RemoteApi.Controllers
     public class AgentsController : ControllerBase
     {
         private readonly ICommandExecutor _commandExecutor;
-        private readonly IConfiguration _configuration;
+
+        private readonly string _serverIp;
+        private readonly int _serverPort;
 
         public AgentsController(ICommandExecutor commandExecutor, IConfiguration configuration)
         {
             _commandExecutor = commandExecutor;
-            _configuration = configuration;
+
+            var configuration1 = configuration;
+            _serverIp = configuration1["RemoteServer:Ip"];
+            _serverPort = int.Parse(configuration1["RemoteServer:Port"]);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> List()
+        {
+            var pipelineFilter = new CommandLinePipelineFilter
+            {
+                Decoder = new PackageDecoder()
+            };
+
+            var client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
+            var address = IPAddress.Parse(_serverIp);
+
+            if (!await client.ConnectAsync(new IPEndPoint(address, _serverPort)))
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
+            }
+
+            while (true)
+            {
+                var p = await client.ReceiveAsync();
+
+                if (p == null)
+                {
+                    return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
+                }
+
+                var agents = JsonConvert.DeserializeObject<List<AgentInfo>>(p.Content);
+                return Ok(agents);
+            }
         }
 
         [HttpPost("upload")]
@@ -33,6 +73,7 @@ namespace RemoteApi.Controllers
             {
                 await file.CopyToAsync(stream);
             }
+
             return Ok();
         }
 
@@ -42,14 +83,11 @@ namespace RemoteApi.Controllers
             var directory = "/agents";
             var filePath = Path.Combine(directory, "remote-agent");
 
-            var serverIp = _configuration["RemoteServer:Ip"];
-            var serverPort = _configuration["RemoteServer:Port"];
-
             _commandExecutor.AddSSHKey(ip, rootUser, rootPassword);
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"mkdir -p {directory}");
             _commandExecutor.Scp(ip, rootUser, filePath, filePath);
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"chmod +x {filePath}");
-            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"{filePath} config set -i {serverIp} -p {serverPort}");
+            _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"{filePath} config set -i {_serverIp} -p {_serverPort}");
             _commandExecutor.ExecuteCommandSSH(ip, rootUser, $"nohup {filePath} -d &", true);
             _commandExecutor.RemoveSSHKey(ip, rootUser);
 
