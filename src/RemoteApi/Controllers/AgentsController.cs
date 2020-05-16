@@ -49,7 +49,7 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await client.SendAsync(Encoding.UTF8.GetBytes("ListAgent" + Package.Terminator));
+            await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
 
             while (true)
             {
@@ -60,9 +60,16 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                var agents = JsonConvert.DeserializeObject<List<AgentInfo>>(p.Content);
-                await client.CloseAsync();
-                return Ok(agents);
+                switch (p.Key.ToLower())
+                {
+                    case "connected":
+                        await client.SendAsync(Encoding.UTF8.GetBytes("ListAgent" + Package.Terminator));
+                        break;
+                    default:
+                        var agents = JsonConvert.DeserializeObject<List<AgentInfo>>(p.Content);
+                        await client.CloseAsync();
+                        return Ok(agents);
+                }
             }
         }
 

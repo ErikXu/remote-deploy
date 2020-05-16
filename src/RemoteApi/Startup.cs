@@ -74,6 +74,7 @@ namespace RemoteApi
 
             if (env.IsDevelopment())
             {
+                app.UseCors("All");
                 app.UseDeveloperExceptionPage();
             }
 

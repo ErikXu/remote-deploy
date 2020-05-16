@@ -46,7 +46,7 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes("ListClient" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
 
             while (true)
             {
@@ -57,9 +57,16 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                var agents = JsonConvert.DeserializeObject<List<ClientInfo>>(p.Content).OrderByDescending(n => n.ConnectTime);
-                await _client.CloseAsync();
-                return Ok(agents);
+                switch (p.Key.ToLower())
+                {
+                    case "connected":
+                        await _client.SendAsync(Encoding.UTF8.GetBytes("ListClient" + Package.Terminator));
+                        break;
+                    default:
+                        var clients = JsonConvert.DeserializeObject<List<ClientInfo>>(p.Content).OrderByDescending(n => n.ConnectTime);
+                        await _client.CloseAsync();
+                        return Ok(clients);
+                }
             }
         }
 
@@ -75,7 +82,8 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes($"Disconnect {id}" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+
             while (true)
             {
                 var p = await _client.ReceiveAsync();
@@ -85,8 +93,15 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                await _client.CloseAsync();
-                return Ok(p.Content);
+                switch (p.Key.ToLower())
+                {
+                    case "connected":
+                        await _client.SendAsync(Encoding.UTF8.GetBytes($"Disconnect {id}" + Package.Terminator));
+                        break;
+                    default:
+                        await _client.CloseAsync();
+                        return Ok(p.Content);
+                }
             }
         }
     }
