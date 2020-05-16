@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,13 +15,15 @@ namespace RemoteApi
     {
         private readonly string _serverIp;
         private readonly int _serverPort;
+        private readonly IHubContext<SocketHub, ISocketClient> _socketHub;
         private readonly ILogger _logger;
 
-        public SocketService(IConfiguration configuration, ILogger<SocketService> logger)
+        public SocketService(IConfiguration configuration, ILogger<SocketService> logger, IHubContext<SocketHub, ISocketClient> socketHub)
         {
             _serverIp = configuration["RemoteServer:Ip"];
             _serverPort = int.Parse(configuration["RemoteServer:Port"]);
 
+            _socketHub = socketHub;
             _logger = logger;
         }
 
@@ -49,10 +52,10 @@ namespace RemoteApi
                         _logger.LogInformation("Connected");
                         break;
                     default:
-                        _logger.LogInformation(package.Content);
-                            break;
+                        await _socketHub.Clients.Groups("").ReceiveMessage(package.Content);
+                        break;
                 }
-               
+
             };
 
             client.StartReceive();

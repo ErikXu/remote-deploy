@@ -13,12 +13,15 @@ namespace RemoteApi
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
+
+        private IWebHostEnvironment Environment { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -30,6 +33,16 @@ namespace RemoteApi
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, "swagger.xml");
                 c.IncludeXmlComments(xmlPath);
             });
+
+            if (Environment.IsDevelopment())
+            {
+                services.AddCors(o => o.AddPolicy("All", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                }));
+            }
 
             services.AddSingleton<ICommandExecutor, CommandExecutor>();
 
@@ -46,6 +59,8 @@ namespace RemoteApi
             });
 
             services.AddHostedService<SocketService>();
+
+            services.AddSignalR();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -69,6 +84,7 @@ namespace RemoteApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<SocketHub>("/messages");
             });
         }
     }
