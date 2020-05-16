@@ -44,6 +44,8 @@ namespace RemoteApi
                 x.MultipartBodyLengthLimit = int.MaxValue;
                 x.MultipartHeadersLengthLimit = int.MaxValue;
             });
+
+            services.AddHostedService<SocketService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
