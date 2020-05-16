@@ -14,10 +14,5 @@ namespace RemoteApi
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
         }
-
-        public async Task SendToGroup(string group, string message)
-        {
-            await Clients.Groups(group).ReceiveMessage(message);
-        }
     }
 }

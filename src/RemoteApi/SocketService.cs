@@ -52,7 +52,7 @@ namespace RemoteApi
                         _logger.LogInformation("Connected");
                         break;
                     default:
-                        await _socketHub.Clients.Groups("").ReceiveMessage(package.Content);
+                        await _socketHub.Clients.Groups("Temp").ReceiveMessage(package.Content + Package.Terminator);
                         break;
                 }
 

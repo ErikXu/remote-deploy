@@ -36,11 +36,12 @@ namespace RemoteApi
 
             if (Environment.IsDevelopment())
             {
-                services.AddCors(o => o.AddPolicy("All", builder =>
+                services.AddCors(o => o.AddPolicy("Cors", builder =>
                 {
-                    builder.AllowAnyOrigin()
+                    builder.WithOrigins("http://localhost:8080")
                         .AllowAnyMethod()
-                        .AllowAnyHeader();
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 }));
             }
 
@@ -74,7 +75,7 @@ namespace RemoteApi
 
             if (env.IsDevelopment())
             {
-                app.UseCors("All");
+                app.UseCors("Cors");
                 app.UseDeveloperExceptionPage();
             }
 
