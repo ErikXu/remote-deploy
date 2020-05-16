@@ -1,0 +1,16 @@
+FROM node:14.0-alpine3.10  AS BUILD_IMAGE
+
+RUN  mkdir -p /usr/src/app
+
+WORKDIR /usr/src/app
+
+COPY . /usr/src/app
+
+RUN npm install
+
+RUN npm run build
+
+FROM nginx:1.15.0-alpine
+
+COPY --from=BUILD_IMAGE /usr/src/app/dist /usr/share/nginx/html
+EXPOSE 80/tcp
