@@ -1,10 +1,14 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using RemoteApi.Models;
 using RemoteCommon;
+using RemoteProto;
 using SuperSocket.Client;
 
 namespace RemoteApi.Controllers
@@ -23,8 +27,23 @@ namespace RemoteApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Execute(string command)
+        public async Task<IActionResult> Execute(CommandForm form)
         {
+            var command = new Command
+            {
+                OperatorId = Guid.NewGuid().ToString(),
+                Ip = form.Ip,
+                Content = form.Command
+            };
+
+            string content;
+
+            await using (var stream = new MemoryStream())
+            {
+                command.WriteTo(stream);
+                content = Encoding.UTF8.GetString(stream.ToArray());
+            }
+            
             var pipelineFilter = new CommandLinePipelineFilter
             {
                 Decoder = new PackageDecoder()
@@ -39,7 +58,7 @@ namespace RemoteApi.Controllers
             }
 
             await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
-            await client.SendAsync(Encoding.UTF8.GetBytes($"Execute {command}" + Package.Terminator));
+            await client.SendAsync(Encoding.UTF8.GetBytes($"Execute {content}" + Package.Terminator));
 
             var result = string.Empty;
             while (true)
@@ -51,7 +70,7 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                if (!string.IsNullOrWhiteSpace(p.Content) && p.Content.Equals("Done", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(p.Content) && p.Content.Equals("Started", StringComparison.OrdinalIgnoreCase))
                 {
                     await client.CloseAsync();
                     return Ok(result);

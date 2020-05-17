@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteServer", "RemoteServe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteCommon", "RemoteCommon\RemoteCommon.csproj", "{4345CD98-F309-4F07-B18E-C2E738FE6BF2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteApi", "RemoteApi\RemoteApi.csproj", "{831C433D-2EAF-49FC-A4A9-0714CA01D35F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteApi", "RemoteApi\RemoteApi.csproj", "{831C433D-2EAF-49FC-A4A9-0714CA01D35F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteProto", "RemoteProto\RemoteProto.csproj", "{3E2EFAE4-FF51-4B72-AFFD-3FA99EED1432}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{831C433D-2EAF-49FC-A4A9-0714CA01D35F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{831C433D-2EAF-49FC-A4A9-0714CA01D35F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{831C433D-2EAF-49FC-A4A9-0714CA01D35F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E2EFAE4-FF51-4B72-AFFD-3FA99EED1432}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E2EFAE4-FF51-4B72-AFFD-3FA99EED1432}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E2EFAE4-FF51-4B72-AFFD-3FA99EED1432}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E2EFAE4-FF51-4B72-AFFD-3FA99EED1432}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

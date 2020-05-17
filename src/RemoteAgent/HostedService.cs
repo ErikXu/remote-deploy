@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
 using RemoteCommon;
+using RemoteProto;
 using SuperSocket.Client;
 
 namespace RemoteAgent
@@ -48,8 +49,8 @@ namespace RemoteAgent
                 switch (package.Key.ToLower())
                 {
                     case "execute":
-                        await Execute(package.Content);
-                        await _client.SendAsync(Encoding.UTF8.GetBytes("Output Done" + Package.Terminator));
+                        var command = Command.Parser.ParseFrom(Encoding.UTF8.GetBytes(package.Content));
+                        await Execute(command.OperatorId, command.Content);
                         break;
                     case "connected":
                         _console.WriteLine("Connected");
@@ -66,9 +67,9 @@ namespace RemoteAgent
 
         }
 
-        private async Task Execute(string script)
+        private async Task Execute(string operatorId, string script)
         {
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + script + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {script}{Package.Terminator}"));
 
             try
             {
@@ -86,8 +87,8 @@ namespace RemoteAgent
                     }
                 };
 
-                process.OutputDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + Package.Terminator));
-                process.ErrorDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + args.Data + Package.Terminator));
+                process.OutputDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {args.Data}{Package.Terminator}"));
+                process.ErrorDataReceived += async (sender, args) => await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {args.Data}{Package.Terminator}"));
 
                 process.Start();
                 process.BeginOutputReadLine();
@@ -96,7 +97,7 @@ namespace RemoteAgent
             }
             catch (Exception ex)
             {
-                await _client.SendAsync(Encoding.UTF8.GetBytes("Output " + ex.Message + Package.Terminator));
+                await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {ex.Message}{Package.Terminator}"));
             }
         }
 

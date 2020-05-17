@@ -1,0 +1,1 @@
+protoc.exe --proto_path=. --csharp_out=../src/RemoteProto --csharp_opt=base_namespace=RemoteProto entities.proto
