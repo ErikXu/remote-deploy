@@ -51,11 +51,14 @@ namespace RemoteApi
                     case "connected":
                         _logger.LogInformation("Connected");
                         break;
+                    case "output":
+                        var temp = package.Content.Split(' ');
+                        await _socketHub.Clients.Groups(temp[0]).ReceiveMessage(temp[1] + Package.Terminator);
+                        break;
                     default:
-                        await _socketHub.Clients.Groups("Temp").ReceiveMessage(package.Content + Package.Terminator);
+                        _logger.LogError($"Unknown command:{package.Key}");
                         break;
                 }
-
             };
 
             client.StartReceive();

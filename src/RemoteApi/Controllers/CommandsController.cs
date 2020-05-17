@@ -31,7 +31,7 @@ namespace RemoteApi.Controllers
         {
             var command = new Command
             {
-                OperatorId = Guid.NewGuid().ToString(),
+                OperatorId = form.OperatorId,
                 Ip = form.Ip,
                 Content = form.Command
             };
@@ -60,7 +60,6 @@ namespace RemoteApi.Controllers
             await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
             await client.SendAsync(Encoding.UTF8.GetBytes($"Execute {content}" + Package.Terminator));
 
-            var result = string.Empty;
             while (true)
             {
                 var p = await client.ReceiveAsync();
@@ -73,10 +72,8 @@ namespace RemoteApi.Controllers
                 if (!string.IsNullOrWhiteSpace(p.Content) && p.Content.Equals("Started", StringComparison.OrdinalIgnoreCase))
                 {
                     await client.CloseAsync();
-                    return Ok(result);
+                    return Ok(form.OperatorId);
                 }
-
-                result += p.Content + Environment.NewLine;
             }
         }
     }
