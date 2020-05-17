@@ -5,7 +5,7 @@
     <a-button type="primary" @click="submit">
       Submit
     </a-button>
-    <a-textarea v-model="value" :rows="10" />
+    <a-textarea v-model="output" :rows="10" />
   </a-card>
 </template>
 <script>
@@ -25,13 +25,14 @@ export default {
   data () {
     return {
       ip: '',
-      value: '',
+      output: '',
       command: ''
     }
   },
   methods: {
     submit () {
       var self = this
+      self.output = ''
       var operatorId = uuidv4()
 
       var form = {
@@ -41,7 +42,7 @@ export default {
       }
       connection.invoke('Subscribe', operatorId).catch(err => console.error(err))
       connection.on('ReceiveMessage', function (message) {
-        self.value += message
+        self.output += message
       })
 
       return execute(form).then(response => {

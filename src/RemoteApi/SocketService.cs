@@ -52,8 +52,10 @@ namespace RemoteApi
                         _logger.LogInformation("Connected");
                         break;
                     case "output":
-                        var temp = package.Content.Split(' ');
-                        await _socketHub.Clients.Groups(temp[0]).ReceiveMessage(temp[1] + Package.Terminator);
+                        var index = package.Content.IndexOf(' ');
+                        var operatorId = package.Content.Substring(0, index);
+                        var content = package.Content.Substring(index + 1, package.Content.Length - index - 1);
+                        await _socketHub.Clients.Groups(operatorId).ReceiveMessage(content + Package.Terminator);
                         break;
                     default:
                         _logger.LogError($"Unknown command:{package.Key}");
