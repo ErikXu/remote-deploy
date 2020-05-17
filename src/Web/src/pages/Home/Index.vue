@@ -37,7 +37,7 @@ export default {
       var form = {
         operatorId: operatorId,
         ip: self.ip,
-        content: self.command
+        command: self.command
       }
       connection.invoke('Subscribe', operatorId).catch(err => console.error(err))
       connection.on('ReceiveMessage', function (message) {
