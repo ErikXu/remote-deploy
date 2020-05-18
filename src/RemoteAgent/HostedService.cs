@@ -17,6 +17,7 @@ namespace RemoteAgent
         private readonly IConsole _console;
         private readonly IEasyClient<PackageInfo> _client;
         private readonly IConfigService _configService;
+        private bool _shouldReconnect = true;
 
         public HostedService(IConsole console, IConfigService configService)
         {
@@ -65,6 +66,24 @@ namespace RemoteAgent
 
             await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent" + Package.Terminator));
 
+            _client.Closed += async (sender, args) =>
+            {
+                if (!_shouldReconnect)
+                {
+                    return;
+                }
+
+                Thread.Sleep(2000);
+
+                if (!await _client.ConnectAsync(new IPEndPoint(address, config.ServerPort), cancellationToken))
+                {
+                    _console.WriteLine("Failed to connect the target server.");
+                }
+                else
+                {
+                    _client.StartReceive();
+                }
+            };
         }
 
         private async Task Execute(string operatorId, string script)
@@ -103,6 +122,7 @@ namespace RemoteAgent
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
+            _shouldReconnect = false;
             await _client.CloseAsync();
             _console.WriteLine("Background service is stopped...");
         }

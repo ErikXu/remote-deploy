@@ -17,6 +17,8 @@ namespace RemoteApi
         private readonly int _serverPort;
         private readonly IHubContext<SocketHub, ISocketClient> _socketHub;
         private readonly ILogger _logger;
+        private readonly IEasyClient<PackageInfo> _client;
+        private bool _shouldReconnect = true;
 
         public SocketService(IConfiguration configuration, ILogger<SocketService> logger, IHubContext<SocketHub, ISocketClient> socketHub)
         {
@@ -25,26 +27,27 @@ namespace RemoteApi
 
             _socketHub = socketHub;
             _logger = logger;
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Socket Service is starting.");
 
             var pipelineFilter = new CommandLinePipelineFilter
             {
                 Decoder = new PackageDecoder()
             };
 
-            var client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
+            _client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
+        }
+
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Socket Service is starting.");
+
             var address = IPAddress.Parse(_serverIp);
 
-            if (!await client.ConnectAsync(new IPEndPoint(address, _serverPort), cancellationToken))
+            if (!await _client.ConnectAsync(new IPEndPoint(address, _serverPort), cancellationToken))
             {
                 _logger.LogError("Failed to connect to the socket server.");
             }
 
-            client.PackageHandler += async (sender, package) =>
+            _client.PackageHandler += async (sender, package) =>
             {
                 switch (package.Key.ToLower())
                 {
@@ -63,16 +66,35 @@ namespace RemoteApi
                 }
             };
 
-            client.StartReceive();
+            _client.StartReceive();
 
-            await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+
+            _client.Closed += async (sender, args) =>
+            {
+                if (!_shouldReconnect)
+                {
+                    return;
+                }
+
+                Thread.Sleep(2000);
+
+                if (!await _client.ConnectAsync(new IPEndPoint(address, _serverPort), cancellationToken))
+                {
+                    _logger.LogError("Failed to connect to the socket server.");
+                }
+                else
+                {
+                    _client.StartReceive();
+                }
+            };
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Socket Service is stopping.");
-
-            return Task.CompletedTask;
+            _shouldReconnect = false;
+            await _client.CloseAsync();
+            _logger.LogInformation("Socket Service is stopped...");
         }
     }
 }
