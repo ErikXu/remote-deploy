@@ -1,18 +1,66 @@
 <template>
   <a-card>
-    <a-input placeholder="ip" v-model="ip"/>
-    <a-textarea placeholder="command" v-model="command" :rows="4" />
-    <a-button type="primary" @click="submit">
-      Submit
-    </a-button>
-    <a-textarea v-model="output" :rows="10" />
+    <a-form :form="form" class="form">
+      <a-form-item
+        label="IP"
+        :label-col="{ span: 2 }"
+        :wrapper-col="{ span: 22 }"
+        :required="true"
+      >
+        <a-input
+          placeholder="Please input IP"
+          v-decorator="[
+            'ip',
+            {
+              rules: [
+                { required: true, message: 'Please input IP', whitespace: true }
+              ]
+            }
+          ]"
+        />
+      </a-form-item>
+      <a-form-item
+        label="Command"
+        :label-col="{ span: 2 }"
+        :wrapper-col="{ span: 22 }"
+        :required="true"
+      >
+        <a-textarea
+          rows="4"
+          placeholder="Please input the command"
+          v-decorator="[
+            'command',
+            {
+              rules: [
+                {
+                  required: true,
+                  message: 'Please input the command',
+                  whitespace: true
+                }
+              ]
+            }
+          ]"
+        />
+      </a-form-item>
+      <a-form-item :wrapper-col="{ span: 22, offset: 2 }">
+        <a-button type="primary" html-type="submit" @click="submit">
+          Submit
+        </a-button>
+      </a-form-item>
+      <a-form-item :wrapper-col="{ span: 22, offset: 2 }">
+        <prism language="bash" :code="output"></prism>
+      </a-form-item>
+    </a-form>
   </a-card>
 </template>
 <script>
-
 import * as signalR from '@microsoft/signalr'
 import { execute } from '@/api/command'
 import { v4 as uuidv4 } from 'uuid'
+import Prism from 'vue-prismjs'
+import 'prismjs/themes/prism-tomorrow.css'
+import 'prismjs/components/prism-markup-templating.js'
+import 'prismjs/components/prism-php.js'
 
 const connection = new signalR.HubConnectionBuilder()
   .withUrl(process.env.BASE_API + '/messages')
@@ -22,30 +70,39 @@ const connection = new signalR.HubConnectionBuilder()
 connection.start()
 
 export default {
+  name: 'Home',
+  components: {
+    Prism
+  },
   data () {
     return {
-      ip: '',
-      output: '',
-      command: ''
+      form: this.$form.createForm(this),
+      output: 'Command output here...'
     }
   },
   methods: {
     submit () {
       var self = this
       self.output = ''
-      var operatorId = uuidv4()
 
-      var form = {
-        operatorId: operatorId,
-        ip: self.ip,
-        command: self.command
-      }
-      connection.invoke('Subscribe', operatorId).catch(err => console.error(err))
-      connection.on('ReceiveMessage', function (message) {
-        self.output += message
-      })
+      self.form.validateFields((err, values) => {
+        if (!err) {
+          var operatorId = uuidv4()
+          var form = {
+            operatorId: operatorId,
+            ip: values.ip,
+            command: values.command
+          }
 
-      return execute(form).then(response => {
+          connection
+            .invoke('Subscribe', operatorId)
+            .catch(err => console.error(err))
+          connection.on('ReceiveMessage', function (message) {
+            self.output += message
+          })
+
+          return execute(form).then(response => {})
+        }
       })
     }
   }
