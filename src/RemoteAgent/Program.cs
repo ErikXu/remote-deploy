@@ -2,7 +2,10 @@
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RemoteAgent.Commands;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace RemoteAgent
 {
@@ -51,6 +54,10 @@ namespace RemoteAgent
         {
             if (Detach)
             {
+                Log.Logger = new LoggerConfiguration()
+                    .WriteTo.File("/agents/log-.txt", rollingInterval: RollingInterval.Day)
+                    .CreateLogger();
+
                 var builder = new HostBuilder()
                     .ConfigureServices((hostContext, services) =>
                     {
@@ -58,6 +65,12 @@ namespace RemoteAgent
                         services.AddHostedService<HostedService>();
                         services.AddSingleton<ICommandExecutor, CommandExecutor>();
                         services.AddSingleton<IConfigService, ConfigService>();
+
+                        services.AddLogging(config =>
+                        {
+                            config.ClearProviders();
+                            config.AddProvider(new SerilogLoggerProvider(Log.Logger));
+                        });
                     }).UseConsoleLifetime()
                     .Build();
 
