@@ -77,6 +77,7 @@ export default {
   data () {
     return {
       form: this.$form.createForm(this),
+      operatorId: '',
       output: 'Command output here...'
     }
   },
@@ -87,15 +88,21 @@ export default {
 
       self.form.validateFields((err, values) => {
         if (!err) {
-          var operatorId = uuidv4()
+          if (self.operatorId !== '') {
+            connection
+              .invoke('Unsubscribe', self.operatorId)
+              .catch(err => console.error(err))
+          }
+
+          self.operatorId = uuidv4()
           var form = {
-            operatorId: operatorId,
+            operatorId: self.operatorId,
             ip: values.ip,
             command: values.command
           }
 
           connection
-            .invoke('Subscribe', operatorId)
+            .invoke('Subscribe', self.operatorId)
             .catch(err => console.error(err))
           connection.on('ReceiveMessage', function (message) {
             self.output += message

@@ -14,5 +14,10 @@ namespace RemoteApi
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
         }
+
+        public async Task Unsubscribe(string group)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+        }
     }
 }
