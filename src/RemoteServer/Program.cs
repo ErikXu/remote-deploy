@@ -23,7 +23,8 @@ namespace RemoteServer
                     commandOptions.AddCommand<ListAgentCommand>();
                     commandOptions.AddCommand<ListClientCommand>();
                     commandOptions.AddCommand<DisconnectCommand>();
-                    
+                    commandOptions.AddCommand<PingCommand>();
+
                     //commandOptions.AddCommandAssembly(typeof(Program).GetTypeInfo().Assembly);
                 })
                 .ConfigureServices(

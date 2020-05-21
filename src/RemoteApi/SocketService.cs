@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,11 @@ namespace RemoteApi
         private readonly IHubContext<SocketHub, ISocketClient> _socketHub;
         private readonly ILogger _logger;
         private readonly IEasyClient<PackageInfo> _client;
+        private DateTime _pongTime = DateTime.UtcNow;
+        private Timer _pingTimer;
+        private Timer _checkPingTimer;
+        private readonly int _pingIntervalSecond = 2;
+        private readonly int _checkPingIntervalSecond = 5;
         private bool _shouldReconnect = true;
 
         public SocketService(IConfiguration configuration, ILogger<SocketService> logger, IHubContext<SocketHub, ISocketClient> socketHub)
@@ -60,6 +66,10 @@ namespace RemoteApi
                         var content = package.Content.Substring(index + 1, package.Content.Length - index - 1);
                         await _socketHub.Clients.Groups(operatorId).ReceiveMessage(content + Package.Terminator);
                         break;
+                    case "pong":
+                        var unix = long.Parse(package.Content);
+                        _pongTime = DateTimeOffset.FromUnixTimeMilliseconds(unix).UtcDateTime;
+                        break;
                     default:
                         _logger.LogError($"Unknown command:{package.Key}");
                         break;
@@ -69,6 +79,9 @@ namespace RemoteApi
             _client.StartReceive();
 
             await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+
+            _pingTimer = new Timer(SendPing, null, TimeSpan.Zero, TimeSpan.FromSeconds(_pingIntervalSecond));
+            _checkPingTimer = new Timer(CheckPong, null, TimeSpan.Zero, TimeSpan.FromSeconds(_checkPingIntervalSecond));
 
             _client.Closed += async (sender, args) =>
             {
@@ -90,9 +103,39 @@ namespace RemoteApi
             };
         }
 
+        private void SendPing(object state)
+        {
+            var offset = new DateTimeOffset(DateTime.UtcNow);
+            _client.SendAsync(Encoding.UTF8.GetBytes($"Ping {offset.ToUnixTimeMilliseconds()}" + Package.Terminator));
+        }
+
+        private void CheckPong(object state)
+        {
+            if ((DateTime.UtcNow - _pongTime).TotalSeconds > _checkPingIntervalSecond)
+            {
+                if (_shouldReconnect)
+                {
+                    _logger.LogError("Missing pong, try to reconnect.");
+
+                    var address = IPAddress.Parse(_serverIp);
+                    if (!_client.ConnectAsync(new IPEndPoint(address, _serverPort)).Result)
+                    {
+                        _logger.LogError("Failed to reconnect to the target server.");
+                    }
+                    else
+                    {
+                        _client.StartReceive();
+                        _logger.LogInformation("Connection reconnect.");
+                    }
+                }
+            }
+        }
+
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             _shouldReconnect = false;
+            _checkPingTimer?.Change(Timeout.Infinite, 0);
+            _pingTimer?.Change(Timeout.Infinite, 0);
             await _client.CloseAsync();
             _logger.LogInformation("Socket Service is stopped...");
         }

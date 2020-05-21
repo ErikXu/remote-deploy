@@ -16,8 +16,13 @@ namespace RemoteAgent
     {
         private readonly ILogger _logger;
         private readonly IEasyClient<PackageInfo> _client;
-        private readonly IConfigService _configService;
+        private DateTime _pongTime = DateTime.UtcNow;
+        private Timer _pingTimer;
+        private Timer _checkPingTimer;
+        private readonly int _pingIntervalSecond = 2;
+        private readonly int _checkPingIntervalSecond = 5;
         private bool _shouldReconnect = true;
+        private readonly Config _config;
 
         public HostedService(ILogger<HostedService> logger, IConfigService configService)
         {
@@ -29,20 +34,18 @@ namespace RemoteAgent
             };
 
             _client = new EasyClient<PackageInfo>(pipelineFilter).AsClient();
-            _configService = configService;
+            _config = configService.Get();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Background service is started...");
 
-            var config = _configService.Get();
+            var address = IPAddress.Parse(_config.ServerIp);
 
-            var address = IPAddress.Parse(config.ServerIp);
-
-            if (!await _client.ConnectAsync(new IPEndPoint(address, config.ServerPort), cancellationToken))
+            if (!await _client.ConnectAsync(new IPEndPoint(address, _config.ServerPort), cancellationToken))
             {
-                _logger.LogError("Failed to connect the target server.");
+                _logger.LogError("Failed to connect to the target server.");
             }
 
             _client.PackageHandler += async (sender, package) =>
@@ -56,6 +59,10 @@ namespace RemoteAgent
                     case "connected":
                         _logger.LogInformation("Connected");
                         break;
+                    case "pong":
+                        var unix = long.Parse(package.Content);
+                        _pongTime = DateTimeOffset.FromUnixTimeMilliseconds(unix).UtcDateTime;
+                        break;
                     default:
                         _logger.LogWarning($"Unknown command:{package.Key}");
                         break;
@@ -65,6 +72,9 @@ namespace RemoteAgent
             _client.StartReceive();
 
             await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent" + Package.Terminator));
+
+            _pingTimer = new Timer(SendPing, null, TimeSpan.Zero, TimeSpan.FromSeconds(_pingIntervalSecond));
+            _checkPingTimer = new Timer(CheckPong, null, TimeSpan.Zero, TimeSpan.FromSeconds(_checkPingIntervalSecond));
 
             _client.Closed += async (sender, args) =>
             {
@@ -77,9 +87,9 @@ namespace RemoteAgent
 
                 Thread.Sleep(2000);
 
-                if (!await _client.ConnectAsync(new IPEndPoint(address, config.ServerPort), cancellationToken))
+                if (!await _client.ConnectAsync(new IPEndPoint(address, _config.ServerPort), cancellationToken))
                 {
-                    _logger.LogError("Failed to reconnect the target server.");
+                    _logger.LogError("Failed to reconnect to the target server.");
                 }
                 else
                 {
@@ -87,6 +97,34 @@ namespace RemoteAgent
                     _logger.LogInformation("Connection reconnect.");
                 }
             };
+        }
+
+        private void SendPing(object state)
+        {
+            var offset = new DateTimeOffset(DateTime.UtcNow);
+            _client.SendAsync(Encoding.UTF8.GetBytes($"Ping {offset.ToUnixTimeMilliseconds()}" + Package.Terminator));
+        }
+
+        private void CheckPong(object state)
+        {
+            if ((DateTime.UtcNow - _pongTime).TotalSeconds > _checkPingIntervalSecond)
+            {
+                if (_shouldReconnect)
+                {
+                    _logger.LogError("Missing pong, try to reconnect.");
+
+                    var address = IPAddress.Parse(_config.ServerIp);
+                    if (!_client.ConnectAsync(new IPEndPoint(address, _config.ServerPort)).Result)
+                    {
+                        _logger.LogError("Failed to reconnect to the target server.");
+                    }
+                    else
+                    {
+                        _client.StartReceive();
+                        _logger.LogInformation("Connection reconnect.");
+                    }
+                }
+            }
         }
 
         private async Task Execute(string operatorId, string script)
@@ -147,6 +185,8 @@ namespace RemoteAgent
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             _shouldReconnect = false;
+            _checkPingTimer?.Change(Timeout.Infinite, 0);
+            _pingTimer?.Change(Timeout.Infinite, 0);
             await _client.CloseAsync();
             _logger.LogInformation("Background service is stopped...");
         }
