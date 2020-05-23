@@ -74,6 +74,11 @@ export default {
   components: {
     Prism
   },
+  mounted () {
+    connection.on('ReceiveMessage', function (message) {
+      this.output += message
+    })
+  },
   data () {
     return {
       form: this.$form.createForm(this),
@@ -104,9 +109,6 @@ export default {
           connection
             .invoke('Subscribe', self.operatorId)
             .catch(err => console.error(err))
-          connection.on('ReceiveMessage', function (message) {
-            self.output += message
-          })
 
           return execute(form).then(response => {})
         }

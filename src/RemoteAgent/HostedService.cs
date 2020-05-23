@@ -120,9 +120,10 @@ namespace RemoteAgent
                     }
                     else
                     {
+                        _client.StartReceive();
+
                         _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent" + Package.Terminator));
 
-                        _client.StartReceive();
                         _logger.LogInformation("Connection reconnect.");
                     }
                 }

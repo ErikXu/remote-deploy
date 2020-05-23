@@ -124,9 +124,10 @@ namespace RemoteApi
                     }
                     else
                     {
-                        await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
-
                         _client.StartReceive();
+
+                        _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+
                         _logger.LogInformation("Connection reconnect.");
                     }
                 }
