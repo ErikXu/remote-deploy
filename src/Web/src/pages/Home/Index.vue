@@ -62,6 +62,8 @@ import 'prismjs/themes/prism-tomorrow.css'
 import 'prismjs/components/prism-markup-templating.js'
 import 'prismjs/components/prism-php.js'
 
+var output = 'Command output here...'
+
 const connection = new signalR.HubConnectionBuilder()
   .withUrl(process.env.BASE_API + '/messages')
   .withAutomaticReconnect()
@@ -69,21 +71,23 @@ const connection = new signalR.HubConnectionBuilder()
 
 connection.start()
 
+connection.on('ReceiveMessage', function (message) {
+  output += message
+})
+
 export default {
   name: 'Home',
   components: {
     Prism
   },
   mounted () {
-    connection.on('ReceiveMessage', function (message) {
-      this.output += message
-    })
+
   },
   data () {
     return {
       form: this.$form.createForm(this),
       operatorId: '',
-      output: 'Command output here...'
+      output: output
     }
   },
   methods: {
