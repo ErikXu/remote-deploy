@@ -7,17 +7,19 @@
         :wrapper-col="{ span: 22 }"
         :required="true"
       >
-        <a-input
-          placeholder="Please input IP"
+        <a-select
           v-decorator="[
             'ip',
             {
-              rules: [
-                { required: true, message: 'Please input IP', whitespace: true }
-              ]
+              rules: [{ required: true, message: 'Please select your agent' }]
             }
           ]"
-        />
+          placeholder="Please select your agent"
+        >
+          <a-select-option v-for="agent in agents" :key="agent.ip">
+            {{ agent.ip }}
+          </a-select-option>
+        </a-select>
       </a-form-item>
       <a-form-item
         label="Command"
@@ -56,6 +58,7 @@
 <script>
 import * as signalR from '@microsoft/signalr'
 import { execute } from '@/api/command'
+import { getAgents } from '@/api/agent'
 import { v4 as uuidv4 } from 'uuid'
 import Prism from 'vue-prismjs'
 import 'prismjs/themes/prism-tomorrow.css'
@@ -75,11 +78,14 @@ export default {
     Prism
   },
   mounted () {
-
+    return getAgents().then(response => {
+      this.agents = response
+    })
   },
   data () {
     return {
       form: this.$form.createForm(this),
+      agents: [],
       operatorId: '',
       output: 'Command output here...'
     }
