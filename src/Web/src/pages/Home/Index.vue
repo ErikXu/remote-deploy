@@ -77,11 +77,6 @@ export default {
   components: {
     Prism
   },
-  mounted () {
-    return getAgents().then(response => {
-      this.agents = response
-    })
-  },
   data () {
     return {
       form: this.$form.createForm(this),
@@ -89,6 +84,11 @@ export default {
       operatorId: '',
       output: 'Command output here...'
     }
+  },
+  mounted () {
+    return getAgents().then(response => {
+      this.agents = response
+    })
   },
   methods: {
     submit () {
