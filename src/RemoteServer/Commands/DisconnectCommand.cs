@@ -8,7 +8,7 @@ using SuperSocket.Command;
 
 namespace RemoteServer.Commands
 {
-    [Command(Key = "Disconnect")]
+    [Command(Key = CommandKey.Disconnect)]
     public class DisconnectCommand : IAsyncCommand<PackageInfo>
     {
         private ISessionContainer _sessionContainer;
@@ -28,11 +28,11 @@ namespace RemoteServer.Commands
             if (targetSession != null)
             {
                 await targetSession.CloseAsync();
-                await session.SendAsync(Encoding.UTF8.GetBytes($"Disconnect {package.Content} is disconnected" + Package.Terminator));
+                await session.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Disconnect} {package.Content} is disconnected{Package.Terminator}"));
             }
             else
             {
-                await session.SendAsync(Encoding.UTF8.GetBytes($"Disconnect {package.Content} is not found" + Package.Terminator));
+                await session.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Disconnect} {package.Content} is not found{Package.Terminator}"));
             }
         }
     }

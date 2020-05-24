@@ -9,7 +9,7 @@ using SuperSocket.Command;
 
 namespace RemoteServer.Commands
 {
-    [Command(Key = "ListAgent")]
+    [Command(Key = CommandKey.ListAgent)]
     public class ListAgentCommand : IAsyncCommand<PackageInfo>
     {
         private ISessionContainer _sessionContainer;
@@ -35,7 +35,7 @@ namespace RemoteServer.Commands
                 ConnectTime = n.ConnectTime
             }).ToList();
 
-            await session.SendAsync(Encoding.UTF8.GetBytes("ListAgent " + JsonConvert.SerializeObject(agents) + Package.Terminator));
+            await session.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.ListAgent} {JsonConvert.SerializeObject(agents)}{Package.Terminator}"));
         }
     }
 }

@@ -46,7 +46,7 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Short.ToString()}{Package.Terminator}"));
 
             while (true)
             {
@@ -57,10 +57,10 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                switch (p.Key.ToLower())
+                switch (p.Key)
                 {
-                    case "connected":
-                        await _client.SendAsync(Encoding.UTF8.GetBytes("ListClient" + Package.Terminator));
+                    case CommandKey.Connected:
+                        await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.ListClient}{Package.Terminator}"));
                         break;
                     default:
                         var clients = JsonConvert.DeserializeObject<List<ClientInfo>>(p.Content).OrderByDescending(n => n.ConnectTime);
@@ -82,7 +82,7 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Short.ToString()}{Package.Terminator}"));
 
             while (true)
             {
@@ -93,10 +93,10 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                switch (p.Key.ToLower())
+                switch (p.Key)
                 {
-                    case "connected":
-                        await _client.SendAsync(Encoding.UTF8.GetBytes($"Disconnect {id}" + Package.Terminator));
+                    case CommandKey.Connected:
+                        await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Disconnect} {id}{Package.Terminator}"));
                         break;
                     default:
                         await _client.CloseAsync();

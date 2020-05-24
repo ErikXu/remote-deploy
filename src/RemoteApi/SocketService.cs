@@ -55,18 +55,18 @@ namespace RemoteApi
 
             _client.PackageHandler += async (sender, package) =>
             {
-                switch (package.Key.ToLower())
+                switch (package.Key)
                 {
-                    case "connected":
+                    case CommandKey.Connected:
                         _logger.LogInformation("Connected");
                         break;
-                    case "output":
+                    case CommandKey.Output:
                         var index = package.Content.IndexOf(' ');
                         var operatorId = package.Content.Substring(0, index);
                         var content = package.Content.Substring(index + 1, package.Content.Length - index - 1);
                         await _socketHub.Clients.Groups(operatorId).ReceiveMessage(content + Package.Terminator);
                         break;
-                    case "pong":
+                    case CommandKey.Pong:
                         var unix = long.Parse(package.Content);
                         _pongTime = DateTimeOffset.FromUnixTimeMilliseconds(unix).UtcDateTime;
                         break;
@@ -78,7 +78,7 @@ namespace RemoteApi
 
             _client.StartReceive();
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Web.ToString()}{Package.Terminator}"));
 
             _pingTimer = new Timer(SendPing, null, TimeSpan.Zero, TimeSpan.FromSeconds(_pingIntervalSecond));
             _checkPingTimer = new Timer(CheckPong, null, TimeSpan.Zero, TimeSpan.FromSeconds(_checkPingIntervalSecond));
@@ -106,7 +106,7 @@ namespace RemoteApi
         private void SendPing(object state)
         {
             var offset = new DateTimeOffset(DateTime.UtcNow);
-            _client.SendAsync(Encoding.UTF8.GetBytes($"Ping {offset.ToUnixTimeMilliseconds()}" + Package.Terminator));
+            _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Ping} {offset.ToUnixTimeMilliseconds()}{Package.Terminator}"));
         }
 
         private void CheckPong(object state)
@@ -126,7 +126,7 @@ namespace RemoteApi
                     {
                         _client.StartReceive();
 
-                        _client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+                        _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Web.ToString()}{Package.Terminator}"));
 
                         _logger.LogInformation("Connection reconnect.");
                     }

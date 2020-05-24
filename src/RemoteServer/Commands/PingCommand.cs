@@ -6,12 +6,12 @@ using SuperSocket.Command;
 
 namespace RemoteServer.Commands
 {
-    [Command(Key = "Ping")]
+    [Command(Key = CommandKey.Ping)]
     public class PingCommand : IAsyncCommand<PackageInfo>
     {
         public async ValueTask ExecuteAsync(IAppSession session, PackageInfo package)
         {
-            await session.SendAsync(Encoding.UTF8.GetBytes($"Pong {package.Content}" + Package.Terminator));
+            await session.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Pong} {package.Content}{Package.Terminator}"));
         }
     }
 }

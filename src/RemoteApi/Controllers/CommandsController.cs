@@ -57,8 +57,8 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
-            await client.SendAsync(Encoding.UTF8.GetBytes($"Execute {content}" + Package.Terminator));
+            await client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Short.ToString()}{Package.Terminator}"));
+            await client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Execute} {content}{Package.Terminator}"));
 
             while (true)
             {

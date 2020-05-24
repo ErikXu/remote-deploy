@@ -50,16 +50,16 @@ namespace RemoteAgent
 
             _client.PackageHandler += async (sender, package) =>
             {
-                switch (package.Key.ToLower())
+                switch (package.Key)
                 {
-                    case "execute":
+                    case CommandKey.Execute:
                         var command = Command.Parser.ParseFrom(Encoding.UTF8.GetBytes(package.Content));
                         await Execute(command.OperatorId, command.Content);
                         break;
-                    case "connected":
+                    case CommandKey.Connected:
                         _logger.LogInformation("Connected");
                         break;
-                    case "pong":
+                    case CommandKey.Pong:
                         var unix = long.Parse(package.Content);
                         _pongTime = DateTimeOffset.FromUnixTimeMilliseconds(unix).UtcDateTime;
                         break;
@@ -71,7 +71,7 @@ namespace RemoteAgent
 
             _client.StartReceive();
 
-            await _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent" + Package.Terminator));
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Agent.ToString()}{Package.Terminator}"));
 
             _pingTimer = new Timer(SendPing, null, TimeSpan.Zero, TimeSpan.FromSeconds(_pingIntervalSecond));
             _checkPingTimer = new Timer(CheckPong, null, TimeSpan.Zero, TimeSpan.FromSeconds(_checkPingIntervalSecond));
@@ -102,7 +102,7 @@ namespace RemoteAgent
         private void SendPing(object state)
         {
             var offset = new DateTimeOffset(DateTime.UtcNow);
-            _client.SendAsync(Encoding.UTF8.GetBytes($"Ping {offset.ToUnixTimeMilliseconds()}" + Package.Terminator));
+            _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Ping} {offset.ToUnixTimeMilliseconds()}{Package.Terminator}"));
         }
 
         private void CheckPong(object state)
@@ -122,7 +122,7 @@ namespace RemoteAgent
                     {
                         _client.StartReceive();
 
-                        _client.SendAsync(Encoding.UTF8.GetBytes("Connect Agent" + Package.Terminator));
+                        _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Agent.ToString()}{Package.Terminator}"));
 
                         _logger.LogInformation("Connection reconnect.");
                     }
@@ -132,7 +132,7 @@ namespace RemoteAgent
 
         private async Task Execute(string operatorId, string script)
         {
-            await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {script}{Package.Terminator}"));
+            await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Output} {operatorId} {script}{Package.Terminator}"));
             _logger.LogInformation($"OperatorId:{operatorId}, Command: [{script}] Start");
 
             try
@@ -161,7 +161,7 @@ namespace RemoteAgent
             }
             catch (Exception ex)
             {
-                await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {ex.Message}{Package.Terminator}"));
+                await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Output} {operatorId} {ex.Message}{Package.Terminator}"));
             }
 
             _logger.LogInformation($"OperatorId:{operatorId}, Command: [{script}] End");
@@ -171,7 +171,7 @@ namespace RemoteAgent
         {
             if (!string.IsNullOrWhiteSpace(message))
             {
-                await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {message}{Package.Terminator}"));
+                await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Output} {operatorId} {message}{Package.Terminator}"));
                 _logger.LogInformation(message);
             }
         }
@@ -180,7 +180,7 @@ namespace RemoteAgent
         {
             if (!string.IsNullOrWhiteSpace(message))
             {
-                await _client.SendAsync(Encoding.UTF8.GetBytes($"Output {operatorId} {message}{Package.Terminator}"));
+                await _client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Output} {operatorId} {message}{Package.Terminator}"));
                 _logger.LogError(message);
             }
         }

@@ -9,7 +9,7 @@ using SuperSocket.Command;
 
 namespace RemoteServer.Commands
 {
-    [Command(Key = "Execute")]
+    [Command(Key = CommandKey.Execute)]
     public class ExecuteCommand : IAsyncCommand<PackageInfo>
     {
         private ISessionContainer _sessionContainer;
@@ -30,10 +30,10 @@ namespace RemoteServer.Commands
 
             foreach (IAppSession serverSession in sessions)
             {
-                await serverSession.SendAsync(Encoding.UTF8.GetBytes("Execute " + package.Content + Package.Terminator));
+                await serverSession.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Execute} {package.Content}{Package.Terminator}"));
             }
 
-            await session.SendAsync(Encoding.UTF8.GetBytes("Execute Started" + Package.Terminator));
+            await session.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Execute} Started{Package.Terminator}"));
         }
     }
 }

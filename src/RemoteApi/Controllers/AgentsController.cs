@@ -49,7 +49,7 @@ namespace RemoteApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Failed to connect to the server.");
             }
 
-            await client.SendAsync(Encoding.UTF8.GetBytes("Connect Web" + Package.Terminator));
+            await client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.Connect} {ClientType.Short.ToString()}{Package.Terminator}"));
 
             while (true)
             {
@@ -60,10 +60,10 @@ namespace RemoteApi.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Connection dropped.");
                 }
 
-                switch (p.Key.ToLower())
+                switch (p.Key)
                 {
-                    case "connected":
-                        await client.SendAsync(Encoding.UTF8.GetBytes("ListAgent" + Package.Terminator));
+                    case CommandKey.Connected:
+                        await client.SendAsync(Encoding.UTF8.GetBytes($"{CommandKey.ListAgent}{Package.Terminator}"));
                         break;
                     default:
                         var agents = JsonConvert.DeserializeObject<List<AgentInfo>>(p.Content);
