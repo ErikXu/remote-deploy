@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Minio;
 using Newtonsoft.Json;
 using RemoteCommon;
 using SuperSocket.Client;
@@ -20,13 +21,15 @@ namespace RemoteApi.Controllers
 
         private readonly string _serverIp;
         private readonly int _serverPort;
+        private readonly MinioClient _minioClient;
 
-        public AgentsController(ICommandExecutor commandExecutor, IConfiguration configuration)
+        public AgentsController(ICommandExecutor commandExecutor, IConfiguration configuration, MinioClient minioClient)
         {
             _commandExecutor = commandExecutor;
 
             _serverIp = configuration["RemoteServer:Ip"];
             _serverPort = int.Parse(configuration["RemoteServer:Port"]);
+            _minioClient = minioClient;
         }
 
         /// <summary>
@@ -36,6 +39,7 @@ namespace RemoteApi.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
+            return Ok(new List<AgentInfo>());
             var pipelineFilter = new CommandLinePipelineFilter
             {
                 Decoder = new PackageDecoder()
@@ -71,6 +75,25 @@ namespace RemoteApi.Controllers
                         return Ok(agents);
                 }
             }
+        }
+
+        /// <summary>
+        /// Get agent upload url
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("upload/url")]
+        public async Task<IActionResult> UploadUrl()
+        {
+            var bucket = "agent";
+
+            var isExisted = await _minioClient.BucketExistsAsync(bucket);
+            if (!isExisted)
+            {
+                await _minioClient.MakeBucketAsync(bucket);
+            }
+
+            var url = await _minioClient.PresignedPutObjectAsync("agent", "remote-agent", 60);
+            return Ok(url);
         }
 
         /// <summary>

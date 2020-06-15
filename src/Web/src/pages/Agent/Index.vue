@@ -1,9 +1,20 @@
 <template>
   <a-card>
     <h2>Agent List</h2>
+    <a-upload :file-list="fileList" :remove="remove" :before-upload="beforeUpload" :multiple="false">
+      <a-button> <a-icon type="upload" /> Select </a-button>
+    </a-upload>
+     <a-button
+      type="primary"
+      :disabled="fileList.length === 0"
+      :loading="uploading"
+      @click="upload"
+    >
+      Upload
+    </a-button>
     <a-table
       :columns="columns"
-       :rowKey="rowKey"
+      :rowKey="rowKey"
       :dataSource="data"
       :loading="loading"
       :pagination="false"
@@ -15,7 +26,7 @@
   </a-card>
 </template>
 <script>
-import { getAgents } from '@/api/agent'
+import { getAgents, getUploadUrl, uploadAgent } from '@/api/agent'
 import { simpleFormat } from '@/utils/date'
 
 const columns = [
@@ -52,10 +63,33 @@ export default {
       pagination: {},
       loading: false,
       columns,
-      rowKey: 'sessionId'
+      rowKey: 'sessionId',
+      uploadUrl: '',
+      fileList: [],
+      uploading: false
     }
   },
   methods: {
+    remove (file) {
+      this.fileList = []
+    },
+    beforeUpload (file) {
+      this.fileList = [file]
+      return false
+    },
+    upload () {
+      const { fileList } = this
+      const formData = new FormData()
+      fileList.forEach(file => {
+        formData.append('files[]', file)
+      })
+      this.uploading = true
+      return getUploadUrl().then(urlResponse => {
+        uploadAgent(urlResponse, formData).then(response => {
+          this.uploading = false
+        })
+      })
+    },
     simpleFormat (date) {
       return simpleFormat(date)
     }

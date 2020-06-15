@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using RemoteCommon.Connector.Minio;
 
 namespace RemoteApi
 {
@@ -45,6 +46,7 @@ namespace RemoteApi
                 }));
             }
 
+            services.AddMinio(Configuration);
             services.AddSingleton<ICommandExecutor, CommandExecutor>();
 
             services.Configure<KestrelServerOptions>(options =>
@@ -59,7 +61,7 @@ namespace RemoteApi
                 x.MultipartHeadersLengthLimit = int.MaxValue;
             });
 
-            services.AddHostedService<SocketService>();
+            //services.AddHostedService<SocketService>();
 
             services.AddSignalR();
         }
