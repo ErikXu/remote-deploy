@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using RemoteCommon.Connector.Minio;
+using RemoteCommon.Connector.Mongo;
 
 namespace RemoteApi
 {
@@ -46,6 +47,7 @@ namespace RemoteApi
                 }));
             }
 
+            services.AddMongoDbContext(Configuration)
             services.AddMinio(Configuration);
             services.AddSingleton<ICommandExecutor, CommandExecutor>();
 
@@ -61,7 +63,7 @@ namespace RemoteApi
                 x.MultipartHeadersLengthLimit = int.MaxValue;
             });
 
-            //services.AddHostedService<SocketService>();
+            services.AddHostedService<SocketService>();
 
             services.AddSignalR();
         }

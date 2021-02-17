@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.5" />
     <PackageReference Include="Minio" Version="3.1.13" />
+    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
     <PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-preview3-06" />
   </ItemGroup>
 

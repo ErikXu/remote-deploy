@@ -39,7 +39,6 @@ namespace RemoteApi.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            return Ok(new List<AgentInfo>());
             var pipelineFilter = new CommandLinePipelineFilter
             {
                 Decoder = new PackageDecoder()
